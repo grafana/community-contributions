@@ -65,7 +65,8 @@ jobs:
               SIZE_EMOJI="🟢"
               SIZE_DESC="Small"
               SIZE_CRITERIA="< 100 lines changed, 1-3 files"
-              EXPECTED_FLOW="### ⚡ What happens next for Small PRs:
+              read -r -d '' EXPECTED_FLOW << 'EOF' || true
+### ⚡ What happens next for Small PRs:
 
 1. **Automated Validation** (~ 2-5 minutes)
    - ✅ Linting and code formatting checks
@@ -83,18 +84,22 @@ jobs:
    - 💬 Any clarifying questions
    - ✅ Merge when approved!
 
-**Timeline**: Most Small PRs are reviewed within 1-2 days."
-              TIPS="### 💡 Tips for Small PRs:
+**Timeline**: Most Small PRs are reviewed within 1-2 days.
+EOF
+              read -r -d '' TIPS << 'EOF' || true
+### 💡 Tips for Small PRs:
 - Run tests locally before pushing
 - Ensure code follows style guidelines
 - Keep description clear and concise
-- Respond promptly to any feedback"
+- Respond promptly to any feedback
+EOF
               ;;
             medium)
               SIZE_EMOJI="🟡"
               SIZE_DESC="Medium"
               SIZE_CRITERIA="100-500 lines changed, 4-10 files"
-              EXPECTED_FLOW="### 📋 What happens next for Medium PRs:
+              read -r -d '' EXPECTED_FLOW << 'EOF' || true
+### 📋 What happens next for Medium PRs:
 
 1. **Comprehensive Validation** (~ 5-10 minutes)
    - ✅ Full linting and type checking
@@ -114,18 +119,22 @@ jobs:
    - 🔄 May require iterations
    - ✅ Human approval required before merge
 
-**Timeline**: Medium PRs typically take 2-5 days for full review."
-              TIPS="### 💡 Tips for Medium PRs:
+**Timeline**: Medium PRs typically take 2-5 days for full review.
+EOF
+              read -r -d '' TIPS << 'EOF' || true
+### 💡 Tips for Medium PRs:
 - Ensure comprehensive test coverage
 - Document complex logic
 - Break into smaller commits if possible
-- Be prepared for detailed feedback"
+- Be prepared for detailed feedback
+EOF
               ;;
             large)
               SIZE_EMOJI="🔴"
               SIZE_DESC="Large"
               SIZE_CRITERIA="> 500 lines changed, > 10 files"
-              EXPECTED_FLOW="### 🚦 What happens next for Large PRs:
+              read -r -d '' EXPECTED_FLOW << 'EOF' || true
+### 🚦 What happens next for Large PRs:
 
 **IMPORTANT**: Large PRs follow a different process to ensure your effort is well-directed!
 
@@ -147,13 +156,16 @@ jobs:
 9. 🔄 Iterative improvements
 10. ✅ Final approval and merge
 
-**Timeline**: Large PRs typically take 1-2 weeks or more. The early alignment step helps avoid wasted effort on misaligned implementations."
-              TIPS="### 💡 Tips for Large PRs:
+**Timeline**: Large PRs typically take 1-2 weeks or more. The early alignment step helps avoid wasted effort on misaligned implementations.
+EOF
+              read -r -d '' TIPS << 'EOF' || true
+### 💡 Tips for Large PRs:
 - **Wait for alignment approval** before extensive work
 - Consider breaking into smaller PRs if possible
 - Include high-level design notes
 - Document architectural decisions
-- Be very responsive to early feedback"
+- Be very responsive to early feedback
+EOF
               ;;
           esac
           
@@ -182,7 +194,8 @@ jobs:
           esac
           
           # Build comprehensive comment
-          COMMENT="# 🤖 Automated PR Analysis
+          read -r -d '' COMMENT << EOF || true
+# 🤖 Automated PR Analysis
 
 Thank you for your contribution to Grafana! Your PR has been analyzed and categorized.
 
@@ -224,11 +237,12 @@ $TIPS
 
 - **Questions about this workflow?** Comment on this PR
 - **General contribution questions?** Join our [community Slack](https://grafana.com/slack)
-- **Found a bug in the automation?** Let us know in the comments"
+- **Found a bug in the automation?** Let us know in the comments
+EOF
 
           # Add conflict warning if present
           if [ "$CONFLICT" = "true" ]; then
-            COMMENT="$COMMENT
+            read -r -d '' CONFLICT_MSG << 'EOF' || true
 
 ---
 
@@ -239,7 +253,9 @@ Our automation detected a different size category than what may have been indica
 - **Files modified**: Number of files touched
 - **Complexity**: Overall impact assessment
 
-This helps ensure appropriate review depth for your changes."
+This helps ensure appropriate review depth for your changes.
+EOF
+            COMMENT="$COMMENT$CONFLICT_MSG"
           fi
           
           COMMENT="$COMMENT

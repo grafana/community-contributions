@@ -1,0 +1,109 @@
+name: Categorize External PR (Simple)
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - edited
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  categorize:
+    name: Categorize PR by Size and Type
+    if: github.event.pull_request.author_association != 'MEMBER' && github.event.pull_request.author_association != 'OWNER'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Add external PR label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "pr/external"
+          echo "✅ Added pr/external label"
+
+      - name: Get PR details
+        id: pr-details
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Get lines changed
+          pr_data=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json additions,deletions,files)
+          additions=$(echo "$pr_data" | jq '.additions')
+          deletions=$(echo "$pr_data" | jq '.deletions')
+          lines_changed=$((additions + deletions))
+          files_count=$(echo "$pr_data" | jq '.files | length')
+          
+          echo "lines-changed=$lines_changed" >> "$GITHUB_OUTPUT"
+          echo "files-count=$files_count" >> "$GITHUB_OUTPUT"
+          echo "📊 PR has $lines_changed lines changed across $files_count files"
+
+      - name: Determine size
+        id: size
+        env:
+          LINES: ${{ steps.pr-details.outputs.lines-changed }}
+          FILES: ${{ steps.pr-details.outputs.files-count }}
+        run: |
+          if [ "$LINES" -lt 100 ] && [ "$FILES" -le 3 ]; then
+            echo "size=small" >> "$GITHUB_OUTPUT"
+            echo "label=size:small" >> "$GITHUB_OUTPUT"
+          elif [ "$LINES" -lt 500 ] && [ "$FILES" -le 10 ]; then
+            echo "size=medium" >> "$GITHUB_OUTPUT"
+            echo "label=size:medium" >> "$GITHUB_OUTPUT"
+          else
+            echo "size=large" >> "$GITHUB_OUTPUT"
+            echo "label=size:large" >> "$GITHUB_OUTPUT"
+          fi
+          echo "📏 PR categorized as: ${{ steps.size.outputs.size }}"
+
+      - name: Determine type from files
+        id: type
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Get changed files
+          files=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json files --jq '.files[].path' | tr '\n' ' ')
+          
+          # Check file patterns
+          if echo "$files" | grep -q "docs/\|\.md$\|contribute/"; then
+            echo "type=docs" >> "$GITHUB_OUTPUT"
+            echo "label=pr-category:docs" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=feature" >> "$GITHUB_OUTPUT"
+            echo "label=pr-category:feature" >> "$GITHUB_OUTPUT"
+          fi
+          echo "📝 PR type: ${{ steps.type.outputs.type }}"
+
+      - name: Apply labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SIZE_LABEL: ${{ steps.size.outputs.label }}
+          TYPE_LABEL: ${{ steps.type.outputs.label }}
+        run: |
+          gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "$SIZE_LABEL"
+          gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "$TYPE_LABEL"
+          echo "✅ Applied labels: $SIZE_LABEL, $TYPE_LABEL"
+
+      - name: Post comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SIZE: ${{ steps.size.outputs.size }}
+          TYPE: ${{ steps.type.outputs.type }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body "## 🤖 Automated PR Analysis
+
+Thank you for your contribution! Your PR has been categorized as:
+- **Size**: $SIZE  
+- **Type**: $TYPE
+
+Our automation will now run validation checks. You'll receive feedback shortly!"
+          echo "✅ Posted categorization comment"
+
