@@ -91,11 +91,22 @@ jobs:
           gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "$TYPE_LABEL"
           echo "✅ Applied labels: $SIZE_LABEL, $TYPE_LABEL"
 
-      - name: Log categorization
+      - name: Checkout for scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Post automated comment
         env:
-          SIZE: ${{ steps.size.outputs.size }}
-          TYPE: ${{ steps.type.outputs.type }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "✅ PR categorized as Size: $SIZE, Type: $TYPE"
-          echo "Labels applied successfully"
+          chmod +x .github/scripts/post-pr-comment.sh
+          .github/scripts/post-pr-comment.sh \
+            "${{ github.event.pull_request.number }}" \
+            "${{ steps.size.outputs.size }}" \
+            "${{ steps.type.outputs.type }}" \
+            "${{ github.repository }}"
+          echo "✅ PR categorized and comment posted"
 
