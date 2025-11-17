@@ -50,7 +50,7 @@ jobs:
           gh api /repos/grafana/grafana --jq '.full_name'
           
           # Get PRs from last 7 days using Python for portability
-          seven_days_ago=$(python3 -c 'from datetime import datetime, timedelta; print((datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
+          seven_days_ago=$(python3 -c "from datetime import datetime, timedelta; print((datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ'))")
           echo "Fetching PRs created after: $seven_days_ago"
           
           # Fetch open PRs from grafana/grafana
