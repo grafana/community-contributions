@@ -78,29 +78,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PR_COPY_BOT_TOKEN }}
         run: |
-          # Get author associations for each PR
-          > /tmp/external_prs.json
+          # Skip authorAssociation filtering (requires org membership permissions)
+          # Instead, copy all PRs and rely on manual filtering if needed
+          echo "Preparing PRs for copying (no author filtering)..."
           
-          while read -r pr_number; do
-            if [ -z "$pr_number" ]; then continue; fi
-            
-            # Get PR details including author association
-            pr_info=$(gh pr view "$pr_number" \
-              --repo grafana/grafana \
-              --json number,title,body,author,createdAt,labels,authorAssociation)
-            
-            association=$(echo "$pr_info" | jq -r '.authorAssociation')
-            
-            # Only include external contributors (not MEMBER or OWNER)
-            if [ "$association" != "MEMBER" ] && [ "$association" != "OWNER" ]; then
-              echo "$pr_info" | jq '.' >> /tmp/external_prs.json
-            fi
-          done < <(cat /tmp/upstream_prs.json | jq -r '.[].number')
+          # Just use the already fetched PRs
+          cp /tmp/upstream_prs.json /tmp/external_prs_array.json
           
-          # Convert to array
-          jq -s '.' /tmp/external_prs.json > /tmp/external_prs_array.json
-          
-          echo "Filtered external PRs:"
+          echo "Total PRs to process:"
           cat /tmp/external_prs_array.json | jq 'length'
 
       - name: Load tracker and process PRs
