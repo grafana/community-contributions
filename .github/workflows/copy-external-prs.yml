@@ -148,9 +148,10 @@ jobs:
                 if git diff --staged --quiet; then
                   echo "WARNING: No changes to commit (patch may be empty or already applied)"
                 else
-                  git commit -m "Copy changes from grafana/grafana PR #${pr_number}
-
-Original title: ${pr_title}"
+                  echo "Copy changes from grafana/grafana PR #${pr_number}" > /tmp/commit_msg.txt
+                  echo "" >> /tmp/commit_msg.txt
+                  echo "Original title: ${pr_title}" >> /tmp/commit_msg.txt
+                  git commit -F /tmp/commit_msg.txt
                 fi
               else
                 echo "WARNING: Failed to apply patch cleanly. There may be conflicts."
