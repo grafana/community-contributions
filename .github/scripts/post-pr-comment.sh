@@ -28,7 +28,7 @@ Thank you for your contribution to Grafana! Your PR has been automatically analy
 
 ### ⚡ What happens next for __SIZE__ PRs:
 
-**Automated Validation** (2-5 minutes)
+**Automated Validation**
 - Linting and code formatting checks
 - Test verification
 - PR requirements validation
@@ -37,8 +37,6 @@ Thank you for your contribution to Grafana! Your PR has been automatically analy
 - AI review for code quality and security
 - Human review by maintainers
 - Feedback and iterations as needed
-
-**Timeline**: Most __SIZE__ PRs are reviewed within 1-2 days.
 
 ---
 

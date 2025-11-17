@@ -229,7 +229,7 @@ After deployment:
 
 ### After Going Live
 
-1. Monitor closely for first 2 weeks
+1. Monitor closely after launch
 2. Collect contributor feedback
 3. Measure against success criteria
 4. Iterate based on learnings
@@ -274,8 +274,6 @@ The next steps are in your hands:
 3. Test thoroughly
 4. Deploy and monitor
 5. Iterate based on feedback
-
-**Estimated Time to Deploy**: 2-4 hours for setup + 1-2 weeks for testing
 
 **Questions?** See the setup and testing guides, or refer back to this summary.
 

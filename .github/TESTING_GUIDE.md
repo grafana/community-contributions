@@ -236,7 +236,7 @@ Ask contributors:
 
 ### Metrics to Monitor
 
-Track these metrics for 2-4 weeks:
+Track these metrics after deployment:
 
 **Volume**:
 - Total external PRs
@@ -354,13 +354,11 @@ Consider testing successful when:
 2. Make necessary adjustments
 3. Run final verification
 4. Announce to community
-5. Monitor for first 2 weeks
+5. Monitor closely after launch
 6. Collect feedback
 7. Iterate based on learnings
 
 ---
-
-**Testing Duration**: Plan for 1-2 weeks of testing before full rollout
 
 **Who Should Test**:
 - Maintainers (you)
