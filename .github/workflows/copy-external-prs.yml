@@ -122,12 +122,12 @@ jobs:
             
             # Create dummy test file
             mkdir -p .github/test-data
-            cat > ".github/test-data/pr-copy-${pr_number}.txt" << EOF
-Test data for copied PR #${pr_number}
-Original title: ${pr_title}
-Copy timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-This is a test copy for validating PR workflows.
-EOF
+            {
+              echo "Test data for copied PR #${pr_number}"
+              echo "Original title: ${pr_title}"
+              echo "Copy timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+              echo "This is a test copy for validating PR workflows."
+            } > ".github/test-data/pr-copy-${pr_number}.txt"
             
             git add .github/test-data/pr-copy-${pr_number}.txt
             git commit -m "Test: Copy of external PR for workflow validation"
@@ -142,8 +142,8 @@ EOF
 
 **🤖 Test Copy**
 This is an automated copy of an external contributor PR for testing workflows.
-Source: github.com/grafana/grafana/pull/ ${pr_number}
-(URL intentionally broken to prevent mapping)"
+Source PR: \`grafana/grafana#${pr_number}\`
+(Reference intentionally formatted to prevent auto-linking)"
             
             # Create PR with prefix
             gh pr create \
