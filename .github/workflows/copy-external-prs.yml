@@ -132,60 +132,18 @@ jobs:
             # Create branch
             git checkout -b "$branch_name"
             
-            # Fetch the actual PR changes from upstream
+            # Fetch and apply the actual PR changes from upstream
             echo "Fetching code changes from PR #${pr_number}..."
-            if gh pr diff "$pr_number" --repo grafana/grafana > /tmp/pr_${pr_number}.patch; then
-              echo "Applying changes..."
-              
-              # Try to apply the patch
-              if git apply --3way /tmp/pr_${pr_number}.patch 2>&1; then
-                echo "SUCCESS: Applied changes from PR #${pr_number}"
-                
-                # Stage all changes
-                git add -A
-                
-                # Check if there are changes to commit
-                if git diff --staged --quiet; then
-                  echo "WARNING: No changes to commit (patch may be empty or already applied)"
-                else
-                  echo "Copy changes from grafana/grafana PR #${pr_number}" > /tmp/commit_msg.txt
-                  echo "" >> /tmp/commit_msg.txt
-                  echo "Original title: ${pr_title}" >> /tmp/commit_msg.txt
-                  git commit -F /tmp/commit_msg.txt
-                fi
-              else
-                echo "WARNING: Failed to apply patch cleanly. There may be conflicts."
-                echo "Creating a marker file instead..."
-                
-                # Create a conflict marker file
-                mkdir -p .github/test-data
-                {
-                  echo "WARNING: PATCH APPLICATION FAILED"
-                  echo "Original PR: grafana/grafana #${pr_number}"
-                  echo "Title: ${pr_title}"
-                  echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-                  echo ""
-                  echo "The patch could not be applied cleanly. Manual intervention may be required."
-                } > ".github/test-data/pr-copy-${pr_number}-conflict.txt"
-                
-                git add .github/test-data/pr-copy-${pr_number}-conflict.txt
-                git commit -m "Copy attempt for PR #${pr_number} (conflicts detected)"
-              fi
-            else
-              echo "WARNING: Could not fetch patch for PR #${pr_number}"
-              
-              # Create a fallback marker file
-              mkdir -p .github/test-data
-              {
-                echo "WARNING: PATCH FETCH FAILED"
-                echo "Original PR: grafana/grafana #${pr_number}"
-                echo "Title: ${pr_title}"
-                echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-              } > ".github/test-data/pr-copy-${pr_number}-fetch-failed.txt"
-              
-              git add .github/test-data/pr-copy-${pr_number}-fetch-failed.txt
-              git commit -m "Copy attempt for PR #${pr_number} (fetch failed)"
-            fi
+            gh pr diff "$pr_number" --repo grafana/grafana > /tmp/pr_${pr_number}.patch
+            
+            echo "Applying changes..."
+            git apply /tmp/pr_${pr_number}.patch || echo "Patch apply had issues, continuing..."
+            
+            # Stage all changes
+            git add -A
+            
+            # Commit changes
+            git commit -m "Copy of PR ${pr_number}" || echo "Nothing to commit"
             
             # Push branch
             git push origin "$branch_name"
