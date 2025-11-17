@@ -1,0 +1,186 @@
+name: Copy External PRs
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:  # Manual trigger for testing
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  copy-prs:
+    name: Copy External PRs from grafana/grafana
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PR_COPY_BOT_TOKEN }}
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "PR Copy Bot"
+          git config user.email "bot@tonypowa.grafana"
+
+      - name: Fetch external PRs from grafana/grafana
+        id: fetch-prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get PRs from last 7 days
+          seven_days_ago=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ')
+          
+          # Fetch open PRs from grafana/grafana
+          gh pr list \
+            --repo grafana/grafana \
+            --state open \
+            --limit 100 \
+            --json number,title,body,author,createdAt,labels,headRefName \
+            --jq "[.[] | select(.createdAt >= \"$seven_days_ago\")] | .[:20]" \
+            > /tmp/upstream_prs.json
+          
+          echo "Fetched PRs from upstream"
+          cat /tmp/upstream_prs.json | jq 'length'
+
+      - name: Filter external PRs
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get author associations for each PR
+          > /tmp/external_prs.json
+          
+          while read -r pr_number; do
+            if [ -z "$pr_number" ]; then continue; fi
+            
+            # Get PR details including author association
+            pr_info=$(gh pr view "$pr_number" \
+              --repo grafana/grafana \
+              --json number,title,body,author,createdAt,labels,headRefName,authorAssociation)
+            
+            association=$(echo "$pr_info" | jq -r '.authorAssociation')
+            
+            # Only include external contributors (not MEMBER or OWNER)
+            if [ "$association" != "MEMBER" ] && [ "$association" != "OWNER" ]; then
+              echo "$pr_info" | jq '.' >> /tmp/external_prs.json
+            fi
+          done < <(cat /tmp/upstream_prs.json | jq -r '.[].number')
+          
+          # Convert to array
+          jq -s '.' /tmp/external_prs.json > /tmp/external_prs_array.json
+          
+          echo "Filtered external PRs:"
+          cat /tmp/external_prs_array.json | jq 'length'
+
+      - name: Load tracker and process PRs
+        env:
+          GH_TOKEN: ${{ secrets.PR_COPY_BOT_TOKEN }}
+        run: |
+          # Load tracker
+          if [ ! -f .github/pr-copy-tracker.json ]; then
+            echo '{"copied_prs":[],"last_check_timestamp":null}' > .github/pr-copy-tracker.json
+          fi
+          
+          copied_prs=$(jq -r '.copied_prs[]' .github/pr-copy-tracker.json)
+          
+          # Process up to 5 PRs
+          processed=0
+          max_per_run=5
+          
+          while read -r pr; do
+            if [ -z "$pr" ]; then continue; fi
+            if [ "$processed" -ge "$max_per_run" ]; then
+              echo "Reached limit of $max_per_run PRs per run"
+              break
+            fi
+            
+            pr_number=$(echo "$pr" | jq -r '.number')
+            
+            # Check if already copied
+            if echo "$copied_prs" | grep -q "^${pr_number}$"; then
+              echo "PR #$pr_number already copied, skipping"
+              continue
+            fi
+            
+            echo "Processing PR #$pr_number"
+            
+            # Extract PR details
+            pr_title=$(echo "$pr" | jq -r '.title')
+            pr_body=$(echo "$pr" | jq -r '.body // ""')
+            pr_labels=$(echo "$pr" | jq -r '.labels[].name' | tr '\n' ',' | sed 's/,$//')
+            
+            # Create timestamp
+            timestamp=$(date +%Y%m%d%H%M%S)
+            branch_name="bot/copy-pr-${pr_number}-${timestamp}"
+            
+            # Create branch
+            git checkout -b "$branch_name"
+            
+            # Create dummy test file
+            mkdir -p .github/test-data
+            cat > ".github/test-data/pr-copy-${pr_number}.txt" << EOF
+Test data for copied PR #${pr_number}
+Original title: ${pr_title}
+Copy timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+This is a test copy for validating PR workflows.
+EOF
+            
+            git add .github/test-data/pr-copy-${pr_number}.txt
+            git commit -m "Test: Copy of external PR for workflow validation"
+            
+            # Push branch
+            git push origin "$branch_name"
+            
+            # Create PR with broken URL in description
+            pr_description="$pr_body
+
+---
+
+**🤖 Test Copy**
+This is an automated copy of an external contributor PR for testing workflows.
+Source: github.com/grafana/grafana/pull/ ${pr_number}
+(URL intentionally broken to prevent mapping)"
+            
+            # Create PR with prefix
+            gh pr create \
+              --repo ${{ github.repository }} \
+              --base main \
+              --head "$branch_name" \
+              --title "Ext-PR-Copy: $pr_title" \
+              --body "$pr_description" || echo "PR creation failed, continuing"
+            
+            # Update tracker
+            jq --arg pr "$pr_number" '.copied_prs += [$pr | tonumber]' .github/pr-copy-tracker.json > /tmp/tracker.json
+            mv /tmp/tracker.json .github/pr-copy-tracker.json
+            
+            processed=$((processed + 1))
+            
+            # Return to main branch
+            git checkout main
+            
+            echo "✅ Copied PR #$pr_number"
+            
+          done < <(cat /tmp/external_prs_array.json | jq -c '.[]')
+          
+          echo "Processed $processed PRs"
+
+      - name: Commit updated tracker
+        run: |
+          # Update timestamp
+          jq --arg ts "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" '.last_check_timestamp = $ts' .github/pr-copy-tracker.json > /tmp/tracker.json
+          mv /tmp/tracker.json .github/pr-copy-tracker.json
+          
+          git add .github/pr-copy-tracker.json
+          
+          if git diff --staged --quiet; then
+            echo "No changes to tracker"
+          else
+            git commit -m "Bot: Update PR copy tracker"
+            git push origin main
+            echo "✅ Tracker updated"
+          fi
+
