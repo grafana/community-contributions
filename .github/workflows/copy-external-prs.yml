@@ -34,13 +34,24 @@ jobs:
           # Debug: Check gh CLI version
           gh --version
           
+          # Verify token is set
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ERROR: GH_TOKEN is not set"
+            exit 1
+          fi
+          echo "GH_TOKEN is set (length: ${#GH_TOKEN})"
+          
+          # Test gh authentication
+          echo "Testing gh authentication..."
+          gh auth status
+          
+          # Test basic API access to grafana/grafana
+          echo "Testing API access to grafana/grafana..."
+          gh api /repos/grafana/grafana --jq '.full_name'
+          
           # Get PRs from last 7 days using Python for portability
           seven_days_ago=$(python3 -c 'from datetime import datetime, timedelta; print((datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
           echo "Fetching PRs created after: $seven_days_ago"
-          
-          # Test gh authentication first
-          echo "Testing gh authentication..."
-          gh auth status || { echo "ERROR: gh auth failed"; exit 1; }
           
           # Fetch open PRs from grafana/grafana
           echo "Fetching PRs from grafana/grafana..."
