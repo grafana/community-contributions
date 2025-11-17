@@ -35,13 +35,16 @@ jobs:
           seven_days_ago=$(date -u -d '7 days ago' '+%Y-%m-%dT%H:%M:%SZ')
           
           # Fetch open PRs from grafana/grafana
-          gh pr list \
+          if ! gh pr list \
             --repo grafana/grafana \
             --state open \
             --limit 100 \
-            --json number,title,body,author,createdAt,labels,headRefName \
+            --json number,title,body,author,createdAt,labels \
             --jq "[.[] | select(.createdAt >= \"$seven_days_ago\")] | .[:20]" \
-            > /tmp/upstream_prs.json
+            > /tmp/upstream_prs.json; then
+            echo "ERROR: gh pr list failed. See CLI output above."
+            exit 1
+          fi
           
           echo "Fetched PRs from upstream"
           cat /tmp/upstream_prs.json | jq 'length'
@@ -60,7 +63,7 @@ jobs:
             # Get PR details including author association
             pr_info=$(gh pr view "$pr_number" \
               --repo grafana/grafana \
-              --json number,title,body,author,createdAt,labels,headRefName,authorAssociation)
+              --json number,title,body,author,createdAt,labels,authorAssociation)
             
             association=$(echo "$pr_info" | jq -r '.authorAssociation')
             
