@@ -139,27 +139,27 @@ jobs:
               
               # Try to apply the patch
               if git apply --3way /tmp/pr_${pr_number}.patch 2>&1; then
-                echo "✅ Successfully applied changes from PR #${pr_number}"
+                echo "SUCCESS: Applied changes from PR #${pr_number}"
                 
                 # Stage all changes
                 git add -A
                 
                 # Check if there are changes to commit
                 if git diff --staged --quiet; then
-                  echo "⚠️  No changes to commit (patch may be empty or already applied)"
+                  echo "WARNING: No changes to commit (patch may be empty or already applied)"
                 else
                   git commit -m "Copy changes from grafana/grafana PR #${pr_number}
 
 Original title: ${pr_title}"
                 fi
               else
-                echo "⚠️  Failed to apply patch cleanly. There may be conflicts."
+                echo "WARNING: Failed to apply patch cleanly. There may be conflicts."
                 echo "Creating a marker file instead..."
                 
                 # Create a conflict marker file
                 mkdir -p .github/test-data
                 {
-                  echo "⚠️ PATCH APPLICATION FAILED"
+                  echo "WARNING: PATCH APPLICATION FAILED"
                   echo "Original PR: grafana/grafana #${pr_number}"
                   echo "Title: ${pr_title}"
                   echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
@@ -171,12 +171,12 @@ Original title: ${pr_title}"
                 git commit -m "Copy attempt for PR #${pr_number} (conflicts detected)"
               fi
             else
-              echo "⚠️  Could not fetch patch for PR #${pr_number}"
+              echo "WARNING: Could not fetch patch for PR #${pr_number}"
               
               # Create a fallback marker file
               mkdir -p .github/test-data
               {
-                echo "⚠️ PATCH FETCH FAILED"
+                echo "WARNING: PATCH FETCH FAILED"
                 echo "Original PR: grafana/grafana #${pr_number}"
                 echo "Title: ${pr_title}"
                 echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
@@ -215,7 +215,7 @@ Original title: ${pr_title}"
             # Return to main branch
             git checkout main
             
-            echo "✅ Copied PR #$pr_number"
+            echo "SUCCESS: Copied PR #$pr_number"
             
           done < <(cat /tmp/external_prs_array.json | jq -c '.[]')
           
@@ -234,6 +234,6 @@ Original title: ${pr_title}"
           else
             git commit -m "Bot: Update PR copy tracker"
             git push origin main
-            echo "✅ Tracker updated"
+            echo "SUCCESS: Tracker updated"
           fi
 
