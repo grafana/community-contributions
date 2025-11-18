@@ -112,20 +112,13 @@ runs:
           if [ -n "$OPENAI_API_KEY" ]; then
             echo "Using AI classification..."
             
-            # Prepare file context for better classification
-            file_context=""
-            if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
-              file_context="Modified files: docs/markdown. "
-            elif echo "$FILE_PATHS" | grep -qE "test|spec"; then
-              file_context="Modified files: tests. "
-            fi
-            
             # Build JSON payload using jq to avoid escaping issues
-            user_content="${file_context}Title: ${PR_TITLE}\n\nDescription: ${cleaned_body}"
+            # Include file paths for context
+            user_content="Files changed:\n${FILE_PATHS}\n\nTitle: ${PR_TITLE}\n\nDescription: ${cleaned_body}"
             
             payload=$(jq -n \
               --arg model "gpt-4o-mini" \
-              --arg system_prompt "Classify this PR into ONE category: docs, bugfix, feature, or refactor.\n\nRules:\n- docs: Documentation, README, comments, markdown\n- bugfix: Fixes bugs, errors, crashes, regressions\n- refactor: Code restructuring without new behavior\n- feature: New functionality, enhancements, improvements\n\nRespond with ONLY the category word, nothing else." \
+              --arg system_prompt "You are an expert Grafana engineer helping external contributors get their pull requests ready for review. Your task is to accurately classify each PR so it can be routed to the right team and reviewed efficiently.\n\nClassify this PR into ONE category:\n- docs: Changes to documentation, comments, or markdown files\n- bugfix: Fixes broken functionality, errors, or incorrect behavior\n- refactor: Improves or reorganizes existing code/UI without adding new capabilities\n- feature: Adds new functionality or capabilities that didn't exist before\n\nConsider the file paths, title, and description together. Respond with only one word." \
               --arg user_msg "$user_content" \
               '{
                 model: $model,
