@@ -125,8 +125,8 @@ runs:
           
           # DOCS scoring
           docs_score=0
-          docs_score=$((docs_score + $(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l) * 2))
-          docs_score=$((docs_score + $(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l)))
+          docs_score=$((docs_score + $(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l || echo 0) * 2))
+          docs_score=$((docs_score + $(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l || echo 0)))
           if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
             docs_score=$((docs_score + 3))
           fi
@@ -134,26 +134,26 @@ runs:
           # BUGFIX scoring
           bugfix_score=0
           # Strong signals (3x weight)
-          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l) * 3))
-          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l) * 2))
+          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l || echo 0) * 3))
+          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l || echo 0) * 2))
           # Weak signals (1x weight)
-          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l)))
-          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l)))
+          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l || echo 0)))
+          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l || echo 0)))
           if echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
             bugfix_score=$((bugfix_score + 2))
           fi
           
           # REFACTOR scoring
           refactor_score=0
-          refactor_score=$((refactor_score + $(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l) * 2))
-          refactor_score=$((refactor_score + $(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l)))
+          refactor_score=$((refactor_score + $(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l || echo 0) * 2))
+          refactor_score=$((refactor_score + $(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l || echo 0)))
           
           # FEATURE scoring
           feature_score=0
           # Title keywords (2x weight)
-          feature_score=$((feature_score + $(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l) * 2))
+          feature_score=$((feature_score + $(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l || echo 0) * 2))
           # Body keywords (1x weight)
-          feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l)))
+          feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l || echo 0)))
           
           # Pick type with highest score
           if [ "$docs_score" -gt 0 ] && [ "$docs_score" -ge "$bugfix_score" ] && [ "$docs_score" -ge "$feature_score" ] && [ "$docs_score" -ge "$refactor_score" ]; then
@@ -188,8 +188,8 @@ runs:
         
         echo "conflict=$CONFLICT" >> "$GITHUB_OUTPUT"
         
-        echo "✅ Categorized as: size=$SIZE, type=$TYPE"
+        echo "Categorized as: size=$SIZE, type=$TYPE"
         if [ "$CONFLICT" = "true" ]; then
-          echo "⚠️  Conflict detected with contributor's self-selection"
+          echo "WARNING: Conflict detected with contributor's self-selection"
         fi
 
