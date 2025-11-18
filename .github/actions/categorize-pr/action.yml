@@ -104,8 +104,12 @@ runs:
           cleaned_body=$(echo "$PR_BODY" | sed 's/<!--.*-->//g')
           
           # Strip common template questions and checklists to avoid false positives
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/What is this feature\?.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/Which issue.*does this PR fix\?.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/prove my fix is effective.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Why do we need this feature\?.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Who is this feature for\?.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Notes to the Reviewer.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/prove my fix is effective or my feature works.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/added necessary documentation.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/The docs are updated.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\*\*Special notes for your reviewer:\*\*.*//gi')
@@ -146,11 +150,9 @@ runs:
           
           # FEATURE scoring
           feature_score=0
-          # Strong signals (3x weight) - template indicators
-          feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "What is this feature\?" | wc -l) * 3))
-          # Medium signals (2x weight in title)
+          # Title keywords (2x weight)
           feature_score=$((feature_score + $(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l) * 2))
-          # Weak signals (1x weight)
+          # Body keywords (1x weight)
           feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l)))
           
           # Pick type with highest score
