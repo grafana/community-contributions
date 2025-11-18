@@ -171,6 +171,13 @@ runs:
           
           # Debug: output scores for troubleshooting
           echo "Classification scores: docs=$docs_score bugfix=$bugfix_score refactor=$refactor_score feature=$feature_score -> $TYPE"
+          echo "debug-scores=docs:$docs_score bugfix:$bugfix_score refactor:$refactor_score feature:$feature_score" >> "$GITHUB_OUTPUT"
+        fi
+        
+        # Ensure TYPE is set (should never be empty, but safety check)
+        if [ -z "$TYPE" ]; then
+          echo "ERROR: TYPE is empty after scoring! Defaulting to feature"
+          TYPE="feature"
         fi
         
         echo "type=$TYPE" >> "$GITHUB_OUTPUT"
@@ -178,11 +185,11 @@ runs:
         
         # Check for conflicts with contributor selection
         CONFLICT="false"
-        if echo "$PR_BODY" | grep -q "🟢 Small" && [ "$SIZE" != "small" ]; then
+        if echo "$PR_BODY" | grep -q "Small" && [ "$SIZE" != "small" ]; then
           CONFLICT="true"
-        elif echo "$PR_BODY" | grep -q "🟡 Medium" && [ "$SIZE" != "medium" ]; then
+        elif echo "$PR_BODY" | grep -q "Medium" && [ "$SIZE" != "medium" ]; then
           CONFLICT="true"
-        elif echo "$PR_BODY" | grep -q "🔴 Large" && [ "$SIZE" != "large" ]; then
+        elif echo "$PR_BODY" | grep -q "Large" && [ "$SIZE" != "large" ]; then
           CONFLICT="true"
         fi
         
