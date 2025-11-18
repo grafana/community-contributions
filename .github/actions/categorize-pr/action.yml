@@ -108,16 +108,20 @@ runs:
           # Combine title and cleaned body for keyword analysis
           combined_text="$PR_TITLE $cleaned_body"
           
-          if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
+          # Check for documentation keywords first (before file paths)
+          if echo "$combined_text" | grep -qiE "\b(documentation|docs|swagger|openapi|jsdoc|api.?docs)\b"; then
             TYPE="docs"
-          elif echo "$FILE_PATHS" | grep -q "test\|spec"; then
-            # If mostly test files, might be bugfix
+          elif echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
+            TYPE="docs"
+          elif echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
+            # Only test files in test directories (not spec files like Swagger)
             TYPE="bugfix"
-          elif echo "$combined_text" | grep -qiE "\b(fix(es|ed)?|bug|issue|closes? #[0-9]+|resolves? #[0-9]+)\b"; then
+          elif echo "$combined_text" | grep -qiE "\b(fix(es|ed)?|bug|closes? #[0-9]+|resolves? #[0-9]+)\b"; then
+            # Removed standalone "issue" - too vague
             TYPE="bugfix"
-          elif echo "$combined_text" | grep -qiE "\b(refactor(ing)?|reorganiz(e|ing)|restructur(e|ing)|clean(-| )?up)\b"; then
+          elif echo "$combined_text" | grep -qiE "\b(refactor(ing)?|reorganiz(e|ing)|restructur(e|ing)|clean(-| )?up|simplify|consolidate|extract)\b"; then
             TYPE="refactor"
-          elif echo "$combined_text" | grep -qiE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?)\b"; then
+          elif echo "$combined_text" | grep -qiE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?)\b"; then
             TYPE="feature"
           else
             # Default to feature for code changes
