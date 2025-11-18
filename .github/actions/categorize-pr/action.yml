@@ -116,28 +116,59 @@ runs:
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*$//g')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*\n/\n/g')
           
-          # Combine title and cleaned body for keyword analysis
-          combined_text="$PR_TITLE $cleaned_body"
+          # Scoring-based classification: count keyword occurrences for each type
+          # Title keywords weighted 2x, body keywords 1x
           
-          # Check for documentation keywords first (before file paths)
-          if echo "$combined_text" | grep -qiE "\b(documentation|docs|swagger|openapi|jsdoc|api.?docs)\b"; then
+          # DOCS scoring
+          docs_score=0
+          docs_score=$((docs_score + $(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l) * 2))
+          docs_score=$((docs_score + $(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l)))
+          if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
+            docs_score=$((docs_score + 3))
+          fi
+          
+          # BUGFIX scoring
+          bugfix_score=0
+          # Strong signals (3x weight)
+          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l) * 3))
+          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l) * 2))
+          # Weak signals (1x weight)
+          bugfix_score=$((bugfix_score + $(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l)))
+          bugfix_score=$((bugfix_score + $(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l)))
+          if echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
+            bugfix_score=$((bugfix_score + 2))
+          fi
+          
+          # REFACTOR scoring
+          refactor_score=0
+          refactor_score=$((refactor_score + $(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l) * 2))
+          refactor_score=$((refactor_score + $(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l)))
+          
+          # FEATURE scoring
+          feature_score=0
+          # Strong signals (3x weight) - template indicators
+          feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "What is this feature\?" | wc -l) * 3))
+          # Medium signals (2x weight in title)
+          feature_score=$((feature_score + $(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l) * 2))
+          # Weak signals (1x weight)
+          feature_score=$((feature_score + $(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l)))
+          
+          # Pick type with highest score
+          if [ "$docs_score" -gt 0 ] && [ "$docs_score" -ge "$bugfix_score" ] && [ "$docs_score" -ge "$feature_score" ] && [ "$docs_score" -ge "$refactor_score" ]; then
             TYPE="docs"
-          elif echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
-            TYPE="docs"
-          elif echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
-            # Only test files in test directories (not spec files like Swagger)
+          elif [ "$bugfix_score" -gt "$feature_score" ] && [ "$bugfix_score" -gt "$refactor_score" ]; then
             TYPE="bugfix"
-          elif echo "$combined_text" | grep -qiE "\b(fix(es|ed)?|bug|closes? #[0-9]+|resolves? #[0-9]+)\b"; then
-            # Removed standalone "issue" - too vague
-            TYPE="bugfix"
-          elif echo "$combined_text" | grep -qiE "\b(refactor(ing)?|reorganiz(e|ing)|restructur(e|ing)|clean(-| )?up|simplify|consolidate|extract)\b"; then
-            TYPE="refactor"
-          elif echo "$combined_text" | grep -qiE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?)\b"; then
+          elif [ "$feature_score" -gt "$refactor_score" ]; then
             TYPE="feature"
+          elif [ "$refactor_score" -gt 0 ]; then
+            TYPE="refactor"
           else
-            # Default to feature for code changes
+            # Default to feature if all scores are 0
             TYPE="feature"
           fi
+          
+          # Debug: output scores for troubleshooting
+          echo "Classification scores: docs=$docs_score bugfix=$bugfix_score refactor=$refactor_score feature=$feature_score -> $TYPE"
         fi
         
         echo "type=$TYPE" >> "$GITHUB_OUTPUT"
