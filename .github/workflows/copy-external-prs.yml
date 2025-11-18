@@ -160,15 +160,17 @@ jobs:
               echo ""
               echo "---"
               echo ""
-              echo "Automated test copy from upstream PR ${pr_number}"
+              echo "Automated test copy from upstream"
+              echo ""
+              echo "Original PR: https://github.com/grafana/grafana/pull/ ${pr_number}"
             } > /tmp/pr_description.txt
             
-            # Create PR with prefix
+            # Create PR without prefix (copying all PRs, not just external)
             gh pr create \
               --repo ${{ github.repository }} \
               --base main \
               --head "$branch_name" \
-              --title "Ext-PR-Copy: $pr_title" \
+              --title "$pr_title" \
               --body-file /tmp/pr_description.txt || echo "PR creation failed, continuing"
             
             # Update tracker
