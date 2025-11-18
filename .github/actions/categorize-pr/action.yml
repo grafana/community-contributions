@@ -142,17 +142,27 @@ runs:
                 ],
                 \"temperature\": 0.2,
                 \"max_tokens\": 5
-              }" 2>/dev/null)
+              }")
             
-            # Parse and validate response
-            llm_type=$(echo "$api_response" | jq -r '.choices[0].message.content // ""' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+            # Debug: show API response (for troubleshooting)
+            echo "API response: $api_response"
             
-            if echo "$llm_type" | grep -qE "^(docs|bugfix|feature|refactor)$"; then
-              TYPE="$llm_type"
-              echo "AI classified as: $TYPE"
-            else
-              echo "AI classification failed (response: $llm_type), defaulting to feature"
+            # Check for API errors
+            api_error=$(echo "$api_response" | jq -r '.error.message // ""')
+            if [ -n "$api_error" ]; then
+              echo "OpenAI API error: $api_error"
               TYPE="feature"
+            else
+              # Parse and validate response
+              llm_type=$(echo "$api_response" | jq -r '.choices[0].message.content // ""' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+              
+              if echo "$llm_type" | grep -qE "^(docs|bugfix|feature|refactor)$"; then
+                TYPE="$llm_type"
+                echo "AI classified as: $TYPE"
+              else
+                echo "AI classification failed (response: $llm_type), defaulting to feature"
+                TYPE="feature"
+              fi
             fi
           else
             echo "No API key - defaulting to feature"
