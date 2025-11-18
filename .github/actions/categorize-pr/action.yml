@@ -102,8 +102,6 @@ runs:
         if [ -z "$TYPE" ]; then
           # Strip HTML comments and unfilled template placeholders from PR body
           cleaned_body=$(echo "$PR_BODY" | sed 's/<!--.*-->//g')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*$//g')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*\n/\n/g')
           
           # Strip common template questions and checklists to avoid false positives
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/Which issue.*does this PR fix\?.*//gi')
@@ -112,6 +110,11 @@ runs:
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/The docs are updated.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\*\*Special notes for your reviewer:\*\*.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/Please check that:.*//gi')
+          
+          # Strip unfilled "Closes/Fixes #" placeholders (must be after template questions)
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/^[[:space:]]*(Closes|closes|Fixes|fixes|Resolves|resolves)[[:space:]]+#[[:space:]]*$//g')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*$//g')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*\n/\n/g')
           
           # Combine title and cleaned body for keyword analysis
           combined_text="$PR_TITLE $cleaned_body"
