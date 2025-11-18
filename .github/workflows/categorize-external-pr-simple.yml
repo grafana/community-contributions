@@ -35,6 +35,13 @@ jobs:
           pr-number: ${{ github.event.pull_request.number }}
           pr-body: ${{ github.event.pull_request.body }}
 
+      - name: Debug categorization output
+        run: |
+          echo "size=${{ steps.categorize.outputs.size }}"
+          echo "size-label=${{ steps.categorize.outputs.size-label }}"
+          echo "type=${{ steps.categorize.outputs.type }}"
+          echo "type-label=${{ steps.categorize.outputs.type-label }}"
+
       - name: Apply labels
         env:
           GH_TOKEN: ${{ github.token }}
@@ -42,6 +49,14 @@ jobs:
           SIZE_LABEL: ${{ steps.categorize.outputs.size-label }}
           TYPE_LABEL: ${{ steps.categorize.outputs.type-label }}
         run: |
+          # Validate labels are set
+          if [ -z "$SIZE_LABEL" ] || [ -z "$TYPE_LABEL" ]; then
+            echo "ERROR: Labels not set. SIZE_LABEL='$SIZE_LABEL', TYPE_LABEL='$TYPE_LABEL'"
+            exit 1
+          fi
+          
+          echo "Will apply: $SIZE_LABEL, $TYPE_LABEL"
+          
           # Remove old category and size labels before applying new ones
           existing_labels=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json labels --jq '.labels[].name')
           
