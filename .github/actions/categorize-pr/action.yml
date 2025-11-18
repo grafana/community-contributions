@@ -11,6 +11,10 @@ inputs:
     description: 'Pull request body/description'
     required: false
     default: ''
+  openai-api-key:
+    description: 'OpenAI API key for LLM-based type classification'
+    required: false
+    default: ''
 outputs:
   size:
     description: 'Detected size category (small/medium/large)'
@@ -73,6 +77,7 @@ runs:
         EXISTING_LABELS: ${{ steps.pr-details.outputs.existing-labels }}
         PR_BODY: ${{ inputs.pr-body }}
         PR_TITLE: ${{ steps.pr-details.outputs.pr-title }}
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
       run: |
         # Determine size
         if [ "$LINES_CHANGED" -lt 100 ] && [ "$FILES_COUNT" -le 3 ]; then
@@ -98,81 +103,61 @@ runs:
           TYPE="refactor"
         fi
         
-        # Fallback to file path analysis if no type labels exist
+        # Fallback to AI-powered classification if no type labels exist
         if [ -z "$TYPE" ]; then
-          # Strip HTML comments (including multi-line) from PR body using perl
-          # perl's /s flag makes . match newlines, /g is global
-          cleaned_body=$(echo "$PR_BODY" | perl -pe 's/<!--.*?-->//gs')
+          # Sanitize PR body: strip HTML comments and truncate
+          cleaned_body=$(echo "$PR_BODY" | sed 's/<!--.*-->//g' | head -c 1500)
           
-          # Strip common template questions and checklists to avoid false positives
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/What is this feature\?.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Which issue.*does this PR fix\?.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Why do we need this feature\?.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Who is this feature for\?.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Notes to the Reviewer.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/prove my fix is effective or my feature works.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/added necessary documentation.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/The docs are updated.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\*\*Special notes for your reviewer:\*\*.*//gi')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Please check that:.*//gi')
-          
-          # Strip unfilled "Closes/Fixes #" placeholders (must be after template questions)
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/^[[:space:]]*(Closes|closes|Fixes|fixes|Resolves|resolves)[[:space:]]+#[[:space:]]*$//g')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*$//g')
-          cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*\n/\n/g')
-          
-          # Scoring-based classification: count keyword occurrences for each type
-          # Title keywords weighted 2x, body keywords 1x
-          
-          # DOCS scoring
-          docs_score=0
-          docs_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l | tr -d '\n' || echo 0)
-          docs_body_count=$(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l | tr -d '\n' || echo 0)
-          docs_score=$((${docs_title_count:-0} * 2 + ${docs_body_count:-0}))
-          if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
-            docs_score=$((docs_score + 3))
-          fi
-          
-          # BUGFIX scoring
-          bugfix_score=0
-          bugfix_title_strong=$(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l | tr -d '\n' || echo 0)
-          bugfix_body_strong=$(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l | tr -d '\n' || echo 0)
-          bugfix_title_weak=$(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
-          bugfix_body_weak=$(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
-          bugfix_score=$((${bugfix_title_strong:-0} * 3 + ${bugfix_body_strong:-0} * 2 + ${bugfix_title_weak:-0} + ${bugfix_body_weak:-0}))
-          if echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
-            bugfix_score=$((bugfix_score + 2))
-          fi
-          
-          # REFACTOR scoring
-          refactor_score=0
-          refactor_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l | tr -d '\n' || echo 0)
-          refactor_body_count=$(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l | tr -d '\n' || echo 0)
-          refactor_score=$((${refactor_title_count:-0} * 2 + ${refactor_body_count:-0}))
-          
-          # FEATURE scoring
-          feature_score=0
-          feature_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
-          feature_body_count=$(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
-          feature_score=$((${feature_title_count:-0} * 2 + ${feature_body_count:-0}))
-          
-          # Pick type with highest score
-          if [ "$docs_score" -gt 0 ] && [ "$docs_score" -ge "$bugfix_score" ] && [ "$docs_score" -ge "$feature_score" ] && [ "$docs_score" -ge "$refactor_score" ]; then
-            TYPE="docs"
-          elif [ "$bugfix_score" -gt "$feature_score" ] && [ "$bugfix_score" -gt "$refactor_score" ]; then
-            TYPE="bugfix"
-          elif [ "$feature_score" -gt "$refactor_score" ]; then
-            TYPE="feature"
-          elif [ "$refactor_score" -gt 0 ]; then
-            TYPE="refactor"
+          # Try LLM classification first if API key is available
+          if [ -n "$OPENAI_API_KEY" ]; then
+            echo "Using AI classification..."
+            
+            # Prepare file context for better classification
+            file_context=""
+            if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
+              file_context="Modified files: docs/markdown. "
+            elif echo "$FILE_PATHS" | grep -qE "test|spec"; then
+              file_context="Modified files: tests. "
+            fi
+            
+            # Escape for JSON
+            pr_title_json=$(echo "$PR_TITLE" | jq -Rs .)
+            cleaned_body_json=$(echo "$cleaned_body" | jq -Rs .)
+            
+            # Call OpenAI API
+            api_response=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{
+                \"model\": \"gpt-4o-mini\",
+                \"messages\": [
+                  {
+                    \"role\": \"system\",
+                    \"content\": \"Classify this PR into ONE category: docs, bugfix, feature, or refactor.\\n\\nRules:\\n- docs: Documentation, README, comments, markdown\\n- bugfix: Fixes bugs, errors, crashes, regressions\\n- refactor: Code restructuring without new behavior\\n- feature: New functionality, enhancements, improvements\\n\\nRespond with ONLY the category word, nothing else.\"
+                  },
+                  {
+                    \"role\": \"user\",
+                    \"content\": \"${file_context}Title: $pr_title_json\\n\\nDescription: $cleaned_body_json\"
+                  }
+                ],
+                \"temperature\": 0.2,
+                \"max_tokens\": 5
+              }" 2>/dev/null)
+            
+            # Parse and validate response
+            llm_type=$(echo "$api_response" | jq -r '.choices[0].message.content // ""' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+            
+            if echo "$llm_type" | grep -qE "^(docs|bugfix|feature|refactor)$"; then
+              TYPE="$llm_type"
+              echo "AI classified as: $TYPE"
+            else
+              echo "AI classification failed (response: $llm_type), defaulting to feature"
+              TYPE="feature"
+            fi
           else
-            # Default to feature if all scores are 0
+            echo "No API key - defaulting to feature"
             TYPE="feature"
           fi
-          
-          # Debug: output scores for troubleshooting
-          echo "Classification scores: docs=$docs_score bugfix=$bugfix_score refactor=$refactor_score feature=$feature_score -> $TYPE"
-          echo "debug-scores=docs:$docs_score bugfix:$bugfix_score refactor:$refactor_score feature:$feature_score" >> "$GITHUB_OUTPUT"
         fi
         
         # Ensure TYPE is set (should never be empty, but safety check)
