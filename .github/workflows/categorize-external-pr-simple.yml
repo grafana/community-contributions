@@ -42,9 +42,20 @@ jobs:
           SIZE_LABEL: ${{ steps.categorize.outputs.size-label }}
           TYPE_LABEL: ${{ steps.categorize.outputs.type-label }}
         run: |
+          # Remove old category and size labels before applying new ones
+          existing_labels=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json labels --jq '.labels[].name')
+          
+          for label in $existing_labels; do
+            if [[ "$label" =~ ^(pr-category:|size:) ]]; then
+              echo "Removing old label: $label"
+              gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --remove-label "$label" || true
+            fi
+          done
+          
+          # Apply new labels
           gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "$SIZE_LABEL"
           gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "$TYPE_LABEL"
-          echo "✅ Applied labels: $SIZE_LABEL, $TYPE_LABEL"
+          echo "Applied labels: $SIZE_LABEL, $TYPE_LABEL"
 
       - name: Post automated comment
         env:

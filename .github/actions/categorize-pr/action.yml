@@ -105,10 +105,13 @@ runs:
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*$//g')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\b(Closes|closes|Fixes|fixes|Resolves|resolves) #[[:space:]]*\n/\n/g')
           
-          # Strip common template questions that contain "fix" to avoid false positives
+          # Strip common template questions and checklists to avoid false positives
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/Which issue.*does this PR fix\?.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/prove my fix is effective.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/added necessary documentation.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/The docs are updated.*//gi')
           cleaned_body=$(echo "$cleaned_body" | sed -E 's/\*\*Special notes for your reviewer:\*\*.*//gi')
+          cleaned_body=$(echo "$cleaned_body" | sed -E 's/Please check that:.*//gi')
           
           # Combine title and cleaned body for keyword analysis
           combined_text="$PR_TITLE $cleaned_body"
