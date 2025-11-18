@@ -125,35 +125,35 @@ runs:
           
           # DOCS scoring
           docs_score=0
-          docs_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l || echo 0)
-          docs_body_count=$(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l || echo 0)
-          docs_score=$((docs_title_count * 2 + docs_body_count))
+          docs_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l | tr -d '\n' || echo 0)
+          docs_body_count=$(echo "$cleaned_body" | grep -ioE "\b(documentation|docs|swagger|openapi|jsdoc|readme)\b" | wc -l | tr -d '\n' || echo 0)
+          docs_score=$((${docs_title_count:-0} * 2 + ${docs_body_count:-0}))
           if echo "$FILE_PATHS" | grep -q "docs/\|contribute/\|\.md$"; then
             docs_score=$((docs_score + 3))
           fi
           
           # BUGFIX scoring
           bugfix_score=0
-          bugfix_title_strong=$(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l || echo 0)
-          bugfix_body_strong=$(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l || echo 0)
-          bugfix_title_weak=$(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l || echo 0)
-          bugfix_body_weak=$(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l || echo 0)
-          bugfix_score=$((bugfix_title_strong * 3 + bugfix_body_strong * 2 + bugfix_title_weak + bugfix_body_weak))
+          bugfix_title_strong=$(echo "$PR_TITLE" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l | tr -d '\n' || echo 0)
+          bugfix_body_strong=$(echo "$cleaned_body" | grep -ioE "\b(bug|bugfix|critical|regression)\b" | wc -l | tr -d '\n' || echo 0)
+          bugfix_title_weak=$(echo "$PR_TITLE" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
+          bugfix_body_weak=$(echo "$cleaned_body" | grep -ioE "\b(fix(es|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
+          bugfix_score=$((${bugfix_title_strong:-0} * 3 + ${bugfix_body_strong:-0} * 2 + ${bugfix_title_weak:-0} + ${bugfix_body_weak:-0}))
           if echo "$FILE_PATHS" | grep -qE "(^|/)tests?/.*\.(test|spec)\.|__tests__/"; then
             bugfix_score=$((bugfix_score + 2))
           fi
           
           # REFACTOR scoring
           refactor_score=0
-          refactor_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l || echo 0)
-          refactor_body_count=$(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l || echo 0)
-          refactor_score=$((refactor_title_count * 2 + refactor_body_count))
+          refactor_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l | tr -d '\n' || echo 0)
+          refactor_body_count=$(echo "$cleaned_body" | grep -ioE "\b(refactor(ing)?|reorganiz|restructur|simplify|consolidate|extract|cleanup)\b" | wc -l | tr -d '\n' || echo 0)
+          refactor_score=$((${refactor_title_count:-0} * 2 + ${refactor_body_count:-0}))
           
           # FEATURE scoring
           feature_score=0
-          feature_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l || echo 0)
-          feature_body_count=$(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l || echo 0)
-          feature_score=$((feature_title_count * 2 + feature_body_count))
+          feature_title_count=$(echo "$PR_TITLE" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|allow(s|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
+          feature_body_count=$(echo "$cleaned_body" | grep -ioE "\b(feat(ure)?|add(s|ed|ing)?|new|implement(s|ed|ing)?|enhance(ment)?|update(s|d|ing)?|upgrade(s|d)?|improve(s|d|ment)?|allow(s|ed|ing)?)\b" | wc -l | tr -d '\n' || echo 0)
+          feature_score=$((${feature_title_count:-0} * 2 + ${feature_body_count:-0}))
           
           # Pick type with highest score
           if [ "$docs_score" -gt 0 ] && [ "$docs_score" -ge "$bugfix_score" ] && [ "$docs_score" -ge "$feature_score" ] && [ "$docs_score" -ge "$refactor_score" ]; then
