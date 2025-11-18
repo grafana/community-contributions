@@ -26,6 +26,14 @@ jobs:
           git config user.name "PR Copy Bot"
           git config user.email "bot@tonypowa.grafana"
 
+      - name: Sync fork with upstream
+        run: |
+          echo "Syncing fork's main branch with grafana/grafana..."
+          git remote add upstream https://github.com/grafana/grafana.git || true
+          git fetch upstream main
+          git merge upstream/main --no-edit || echo "Merge had conflicts, continuing with current state"
+          git push origin main || echo "Push failed, continuing"
+
       - name: Fetch external PRs from grafana/grafana
         id: fetch-prs
         env:
@@ -174,23 +182,27 @@ jobs:
             } > /tmp/pr_description.txt
             
             # Create PR without prefix (copying all PRs, not just external)
-            gh pr create \
+            if gh pr create \
               --repo ${{ github.repository }} \
               --base main \
               --head "$branch_name" \
               --title "$pr_title" \
-              --body-file /tmp/pr_description.txt || echo "PR creation failed, continuing"
-            
-            # Update tracker
-            jq --arg pr "$pr_number" '.copied_prs += [$pr | tonumber]' .github/pr-copy-tracker.json > /tmp/tracker.json
-            mv /tmp/tracker.json .github/pr-copy-tracker.json
-            
-            processed=$((processed + 1))
+              --body-file /tmp/pr_description.txt; then
+              
+              echo "SUCCESS: Created PR for #$pr_number"
+              
+              # Update tracker only on success
+              jq --arg pr "$pr_number" '.copied_prs += [$pr | tonumber]' .github/pr-copy-tracker.json > /tmp/tracker.json
+              mv /tmp/tracker.json .github/pr-copy-tracker.json
+              
+              processed=$((processed + 1))
+            else
+              echo "FAILED: Could not create PR for #$pr_number (patch failed or no changes)"
+              # Don't add to tracker - allow retry on next run
+            fi
             
             # Return to main branch
             git checkout main
-            
-            echo "SUCCESS: Copied PR #$pr_number"
             
           done < <(cat /tmp/external_prs_array.json | jq -c '.[]')
           
