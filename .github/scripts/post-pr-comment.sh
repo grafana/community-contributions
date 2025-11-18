@@ -57,15 +57,12 @@ fi
 
 # Add common footer sections
 cat >> /tmp/pr-analysis-comment.md << 'EOF'
----
 
 **Resources**
 - [Contributing guidelines](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md)
 - [Create a pull request](https://github.com/grafana/grafana/blob/main/contribute/create-pull-request.md)
 - [Community forums](https://gra.fan/fromgithubtoforums)
 - [Community Slack](https://slack.grafana.com/)
-
----
 
 *This analysis was generated automatically. Validation workflows should begin shortly.*
 EOF
