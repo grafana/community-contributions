@@ -39,14 +39,27 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           ACTOR: ${{ github.actor }}
         run: |
+          # Get current labels
+          all_labels=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json labels --jq '.labels[].name')
+          
+          # Find current size and type labels
+          size_label=$(echo "$all_labels" | grep -E "^size:" || echo "none")
+          type_label=$(echo "$all_labels" | grep -E "^type/" || echo "none")
+          
           {
             echo "## Labels updated by maintainer"
             echo ""
-            echo "Thank you @$ACTOR for updating the labels. The appropriate validation workflow will now run based on the current classification."
+            echo "Thank you @$ACTOR for updating the labels."
+            echo ""
+            echo "Current classification:"
+            echo "- Size: \`$size_label\`"
+            echo "- Type: \`$type_label\`"
+            echo ""
+            echo "The appropriate validation workflow will now run based on this classification."
           } > /tmp/human-update.md
           
           gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/human-update.md
-          echo "Acknowledged human label change"
+          echo "Acknowledged human label change with current state"
 
       - name: Checkout repository
         if: steps.check_human.outputs.human_change != 'true'
