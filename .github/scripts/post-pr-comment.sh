@@ -11,7 +11,7 @@ REPO="$4"
 
 # Start building the comment
 cat > /tmp/pr-analysis-comment.md << 'EOF'
-## 🤖 Automated PR analysis
+## Automated PR analysis
 
 Thank you for your contribution to Grafana! We want to make it easier for both community contributors and engineers, so we're going to help you get your PR super ready before human review so your chances of getting it merged increase.
 

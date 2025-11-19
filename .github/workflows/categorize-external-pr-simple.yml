@@ -95,21 +95,21 @@ jobs:
           AI_TYPE: ${{ steps.categorize.outputs.disagreement-ai }}
         run: |
           {
-            echo "## Type Classification Disagreement"
+            echo "## Type classification disagreement"
             echo ""
             echo "Our AI analysis suggests a different classification than the existing label:"
             echo ""
-            echo "Existing label: type/$LABEL_TYPE (currently applied)"
-            echo "AI suggestion: type/$AI_TYPE"
+            echo "Existing label: \`type/$LABEL_TYPE\` (currently applied)"
+            echo "AI suggestion: \`type/$AI_TYPE\`"
             echo ""
             echo "What this means:"
             echo "- The existing label will be kept (safer default)"
             echo "- This is informational for maintainer awareness"
             echo "- AI analyzed: title, description, and changed files"
             echo ""
-            echo "Action: If AI is correct, update label to type/$AI_TYPE"
+            echo "Action: If AI is correct, update label to \`type/$AI_TYPE\`"
             echo ""
-            echo "This check helps catch labeling errors from the pr-commands automation or race conditions."
+            echo "This check helps catch labeling errors to ensure the PR gets into the right validation workflow."
           } > /tmp/disagreement-warning.md
           
           gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/disagreement-warning.md
