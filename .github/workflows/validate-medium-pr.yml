@@ -40,10 +40,10 @@ jobs:
             labels=$(gh pr view "$pr_number" --repo ${{ github.repository }} --json labels --jq '.labels[].name' | tr '\n' ',')
             if echo "$labels" | grep -q "size:medium"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:medium label"
+              echo "PR #$pr_number has size:medium label"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number does not have size:medium label, skipping"
+              echo "PR #$pr_number does not have size:medium label, skipping"
             fi
           else
             # pull_request_target event (synchronize)
@@ -53,10 +53,10 @@ jobs:
             labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
             if echo "$labels" | grep -q "size:medium"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:medium label"
+              echo "PR #$pr_number has size:medium label"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number does not have size:medium label, skipping"
+              echo "PR #$pr_number does not have size:medium label, skipping"
             fi
           fi
 
@@ -105,7 +105,7 @@ jobs:
               yarn lint || lint_failed=true
               yarn typecheck || lint_failed=true
             else
-              echo "⚠️ yarn not found, skipping frontend lint"
+              echo "WARNING: yarn not found, skipping frontend lint"
             fi
           fi
           
@@ -119,7 +119,7 @@ jobs:
                 golangci-lint run || lint_failed=true
               fi
             else
-              echo "⚠️ go not found, skipping backend lint"
+              echo "WARNING: go not found, skipping backend lint"
             fi
           fi
           
@@ -143,7 +143,7 @@ jobs:
             if command -v yarn &> /dev/null && [ -f "package.json" ]; then
               yarn test:ci || tests_failed=true
             else
-              echo "⚠️ Skipping frontend tests"
+              echo "WARNING: Skipping frontend tests"
             fi
           fi
           
@@ -153,7 +153,7 @@ jobs:
               # Run full test suite for medium PRs
               go test -timeout=30m ./... || tests_failed=true
             else
-              echo "⚠️ Skipping backend tests"
+              echo "WARNING: Skipping backend tests"
             fi
           fi
           
@@ -198,27 +198,27 @@ jobs:
           AREAS: ${{ steps.detect-areas.outputs.areas }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            COMMENT="## ✅ Medium PR Validation Passed
+            COMMENT="## Medium PR Validation Passed
 
 All comprehensive automated checks have passed! Your PR is ready for thorough AI code review.
 
 ### Validation Results:
-- ✅ PR requirements met
-- ✅ Tests exist for changed code
-- ✅ Comprehensive linting checks passed
-- ✅ Full test suite passed
-- 📍 Affected areas: \`$AREAS\`
+- PR requirements met
+- Tests exist for changed code
+- Comprehensive linting checks passed
+- Full test suite passed
+- Affected areas: \`$AREAS\`
 
 **Next steps:**
-1. 🤖 Cursor's Bugbot will perform thorough code review
-2. 👥 Your PR will be routed to the relevant squad
-3. 👤 Human review required before merge
+1. Cursor's Bugbot will perform thorough code review
+2. Your PR will be routed to the relevant squad
+3. Human review required before merge
 
 This PR has been categorized as Medium size, which means it will receive comprehensive validation and review.
 
 Thank you for your contribution!"
           else
-            COMMENT="## ⚠️ Medium PR Validation - Action Required
+            COMMENT="## WARNING: Medium PR Validation - Action Required
 
 Some comprehensive automated checks did not pass. Please address the following:
 
@@ -226,10 +226,10 @@ Some comprehensive automated checks did not pass. Please address the following:
             
             if [ "$REQUIREMENTS_MET" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ PR requirements met"
+- PR requirements met"
             else
               COMMENT="$COMMENT
-- ❌ **PR requirements not met:**
+- **PR requirements not met:**
 \`\`\`
 $MISSING_REQUIREMENTS
 \`\`\`"
@@ -237,10 +237,10 @@ $MISSING_REQUIREMENTS
             
             if [ "$TESTS_EXIST" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Tests exist for changed code"
+- Tests exist for changed code"
             else
               COMMENT="$COMMENT
-- ❌ **Missing tests for:**
+- **Missing tests for:**
 \`\`\`
 $MISSING_TESTS
 \`\`\`
@@ -249,18 +249,18 @@ Please add comprehensive test coverage for all changes."
             
             if [ "$LINT_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Comprehensive linting checks passed"
+- Comprehensive linting checks passed"
             else
               COMMENT="$COMMENT
-- ❌ **Linting checks failed** - Please run linting locally and fix all issues"
+- **Linting checks failed** - Please run linting locally and fix all issues"
             fi
             
             if [ "$TESTS_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Full test suite passed"
+- Full test suite passed"
             else
               COMMENT="$COMMENT
-- ❌ **Tests failed** - Please ensure all tests pass locally"
+- **Tests failed** - Please ensure all tests pass locally"
             fi
             
             COMMENT="$COMMENT
@@ -295,10 +295,10 @@ Please add comprehensive test coverage for all changes."
           ALL_PASSED: ${{ steps.evaluate.outputs.all-passed }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            echo "✅ Comprehensive validation passed - ready for AI review and squad routing - Squad notified"
+            echo "Comprehensive validation passed - ready for AI review and squad routing - Squad notified"
             exit 0
           else
-            echo "❌ Validation failed - action required"
+            echo "Validation failed - action required"
             exit 1
           fi
 

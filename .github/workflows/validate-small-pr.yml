@@ -40,10 +40,10 @@ jobs:
             labels=$(gh pr view "$pr_number" --repo ${{ github.repository }} --json labels --jq '.labels[].name' | tr '\n' ',')
             if echo "$labels" | grep -q "size:small"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:small label"
+              echo "PR #$pr_number has size:small label"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number does not have size:small label, skipping"
+              echo "PR #$pr_number does not have size:small label, skipping"
             fi
           else
             # pull_request_target event (synchronize)
@@ -53,10 +53,10 @@ jobs:
             labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
             if echo "$labels" | grep -q "size:small"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:small label"
+              echo "PR #$pr_number has size:small label"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number does not have size:small label, skipping"
+              echo "PR #$pr_number does not have size:small label, skipping"
             fi
           fi
 
@@ -105,7 +105,7 @@ jobs:
               yarn install --immutable || lint_failed=true
               yarn lint || lint_failed=true
             else
-              echo "⚠️ yarn not found, skipping frontend lint"
+              echo "WARNING: yarn not found, skipping frontend lint"
             fi
           fi
           
@@ -115,7 +115,7 @@ jobs:
               go fmt ./... || lint_failed=true
               go vet ./... || lint_failed=true
             else
-              echo "⚠️ go not found, skipping backend lint"
+              echo "WARNING: go not found, skipping backend lint"
             fi
           fi
           
@@ -141,7 +141,7 @@ jobs:
               # Run only tests for changed files
               yarn test:ci || tests_failed=true
             else
-              echo "⚠️ Skipping frontend tests"
+              echo "WARNING: Skipping frontend tests"
             fi
           fi
           
@@ -151,7 +151,7 @@ jobs:
               # Run short tests only for small PRs
               go test -short ./... || tests_failed=true
             else
-              echo "⚠️ Skipping backend tests"
+              echo "WARNING: Skipping backend tests"
             fi
           fi
           
@@ -195,24 +195,24 @@ jobs:
           TESTS_PASSED: ${{ steps.tests.outputs.tests-passed }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            COMMENT="## ✅ Small PR Validation Passed
+            COMMENT="## Small PR Validation Passed
 
 All automated checks have passed! Your PR is ready for AI code review.
 
 ### Validation Results:
-- ✅ PR requirements met
-- ✅ Tests exist for changed code
-- ✅ Linting checks passed
-- ✅ Test suite passed
+- PR requirements met
+- Tests exist for changed code
+- Linting checks passed
+- Test suite passed
 
 **Next steps:**
-1. 🤖 Cursor's Bugbot will review your code shortly
-2. 👤 A human reviewer will provide final approval
-3. ⚡ Small PRs typically have faster turnaround times
+1. Cursor's Bugbot will review your code shortly
+2. A human reviewer will provide final approval
+3. Small PRs typically have faster turnaround times
 
 Thank you for your contribution!"
           else
-            COMMENT="## ⚠️ Small PR Validation - Action Required
+            COMMENT="## Small PR Validation - Action Required
 
 Some automated checks did not pass. Please address the following:
 
@@ -220,10 +220,10 @@ Some automated checks did not pass. Please address the following:
             
             if [ "$REQUIREMENTS_MET" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ PR requirements met"
+- PR requirements met"
             else
               COMMENT="$COMMENT
-- ❌ **PR requirements not met:**
+- **PR requirements not met:**
 \`\`\`
 $MISSING_REQUIREMENTS
 \`\`\`"
@@ -231,10 +231,10 @@ $MISSING_REQUIREMENTS
             
             if [ "$TESTS_EXIST" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Tests exist for changed code"
+- Tests exist for changed code"
             else
               COMMENT="$COMMENT
-- ❌ **Missing tests for:**
+- **Missing tests for:**
 \`\`\`
 $MISSING_TESTS
 \`\`\`
@@ -245,18 +245,18 @@ Please add test files following these patterns:
             
             if [ "$LINT_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Linting checks passed"
+- Linting checks passed"
             else
               COMMENT="$COMMENT
-- ❌ **Linting checks failed** - Please run linting locally and fix issues"
+- **Linting checks failed** - Please run linting locally and fix issues"
             fi
             
             if [ "$TESTS_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Test suite passed"
+- Test suite passed"
             else
               COMMENT="$COMMENT
-- ❌ **Tests failed** - Please ensure all tests pass locally"
+- **Tests failed** - Please ensure all tests pass locally"
             fi
             
             COMMENT="$COMMENT
@@ -290,10 +290,10 @@ Please add test files following these patterns:
           ALL_PASSED: ${{ steps.evaluate.outputs.all-passed }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            echo "✅ Validation passed - ready for AI review - Squad notified"
+            echo "Validation passed - ready for AI review - Squad notified"
             exit 0
           else
-            echo "❌ Validation failed - action required"
+            echo "Validation failed - action required"
             exit 1
           fi
 

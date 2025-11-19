@@ -87,7 +87,7 @@ jobs:
           # Note: This is a placeholder for Cursor's Bugbot integration
           # The actual implementation will depend on Cursor's API/CLI
           
-          echo "🤖 Starting Cursor Bugbot review..."
+          echo "Starting Cursor Bugbot review..."
           echo "Review depth: ${{ inputs.review-depth }}"
           echo "Focus: $REVIEW_FOCUS"
           
@@ -106,10 +106,10 @@ jobs:
           
           # Check if Cursor token is configured
           if [ -z "$CURSOR_API_KEY" ]; then
-            echo "⚠️ CURSOR_BUGBOT_TOKEN not configured. Skipping AI review."
+            echo "WARNING: CURSOR_BUGBOT_TOKEN not configured. Skipping AI review."
             echo "bugbot-status=skipped" >> "$GITHUB_OUTPUT"
           else
-            echo "✅ Bugbot review completed"
+            echo "Bugbot review completed"
             echo "bugbot-status=completed" >> "$GITHUB_OUTPUT"
           fi
           
@@ -130,7 +130,7 @@ jobs:
           REVIEW_DEPTH: ${{ inputs.review-depth }}
         run: |
           if [ "$BUGBOT_STATUS" = "skipped" ]; then
-            COMMENT="## 🤖 AI Code Review - Configuration Needed
+            COMMENT="## AI Code Review - Configuration Needed
 
 Cursor's Bugbot review was skipped because the \`CURSOR_BUGBOT_TOKEN\` secret is not configured.
 
@@ -142,14 +142,7 @@ Cursor's Bugbot review was skipped because the \`CURSOR_BUGBOT_TOKEN\` secret is
 **For now**, proceeding without AI code review. Human review will be the primary validation."
           
           elif [ "$FINDINGS_COUNT" -eq 0 ]; then
-            EMOJI=""
-            if [ "$REVIEW_DEPTH" = "lightweight" ]; then
-              EMOJI="🟢"
-            else
-              EMOJI="✨"
-            fi
-            
-            COMMENT="## $EMOJI AI Code Review Complete
+            COMMENT="## AI Code Review Complete
 
 **Review Type**: $REVIEW_DEPTH
 
@@ -160,7 +153,7 @@ $SUMMARY
 **Note**: This is an AI-assisted review. Human review is still required for final approval."
           
           else
-            COMMENT="## 🔍 AI Code Review Complete
+            COMMENT="## AI Code Review Complete
 
 **Review Type**: $REVIEW_DEPTH
 
@@ -181,13 +174,13 @@ Please review the detailed comments below and address the identified issues.
           FINDINGS_COUNT: ${{ steps.bugbot.outputs.findings-count }}
         run: |
           if [ "$BUGBOT_STATUS" = "skipped" ]; then
-            echo "⚠️ Bugbot skipped - configuration needed"
+            echo "WARNING: Bugbot skipped - configuration needed"
             exit 0
           elif [ "$FINDINGS_COUNT" -eq 0 ]; then
-            echo "✅ No critical issues found"
+            echo "No critical issues found"
             exit 0
           else
-            echo "⚠️ $FINDINGS_COUNT findings - please review"
+            echo "WARNING: $FINDINGS_COUNT findings - please review"
             exit 0
           fi
 

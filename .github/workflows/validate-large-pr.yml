@@ -38,10 +38,10 @@ jobs:
             labels=$(gh pr view "$pr_number" --repo ${{ github.repository }} --json labels --jq '.labels[].name' | tr '\n' ',')
             if echo "$labels" | grep -q "size:large" && ! echo "$labels" | grep -q "alignment-approved"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:large label and needs alignment"
+              echo "PR #$pr_number has size:large label and needs alignment"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number doesn't need early alignment, skipping"
+              echo "PR #$pr_number doesn't need early alignment, skipping"
             fi
           else
             pr_number="${{ github.event.pull_request.number }}"
@@ -50,10 +50,10 @@ jobs:
             labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
             if echo "$labels" | grep -q "size:large" && ! echo "$labels" | grep -q "alignment-approved"; then
               echo "should-run=true" >> "$GITHUB_OUTPUT"
-              echo "✅ PR #$pr_number has size:large label and needs alignment"
+              echo "PR #$pr_number has size:large label and needs alignment"
             else
               echo "should-run=false" >> "$GITHUB_OUTPUT"
-              echo "⏭️  PR #$pr_number doesn't need early alignment, skipping"
+              echo "PR #$pr_number doesn't need early alignment, skipping"
             fi
           fi
 
@@ -77,33 +77,33 @@ jobs:
           AREAS: ${{ steps.detect-areas.outputs.areas }}
           PRIMARY_AREA: ${{ steps.detect-areas.outputs.primary-area }}
         run: |
-          COMMENT="## 🔴 Large PR - Early Human Alignment Required
+          COMMENT="## Large PR - Early Human Alignment Required
 
 Thank you for your contribution! This PR has been categorized as **Large** based on its scope.
 
 ### Why Early Alignment?
 
 For large PRs, we request early human review **before** running extensive automated validation. This helps:
-- ✅ Ensure the approach aligns with project goals
-- ✅ Avoid wasted effort on misaligned implementations
-- ✅ Provide early architectural feedback
-- ✅ Guide you in the right direction before heavy development
+- Ensure the approach aligns with project goals
+- Avoid wasted effort on misaligned implementations
+- Provide early architectural feedback
+- Guide you in the right direction before heavy development
 
 ### Detected Changes:
-- 📍 Primary area: \`$PRIMARY_AREA\`
-- 📍 All affected areas: \`$AREAS\`
+- Primary area: \`$PRIMARY_AREA\`
+- All affected areas: \`$AREAS\`
 
 ### Next Steps:
 
 **For the contributor:**
-1. ⏸️  Please wait for a squad member to review the approach
-2. 💬 Be ready to discuss the implementation strategy
-3. 📝 Consider adding high-level design notes if not already present
+1. Please wait for a squad member to review the approach
+2. Be ready to discuss the implementation strategy
+3. Consider adding high-level design notes if not already present
 
 **For squad members:**
-1. 👀 Please review this PR for architectural alignment
-2. 💬 Discuss the approach with the contributor
-3. ✅ Once aligned, add the \`alignment-approved\` label to proceed with automated validation
+1. Please review this PR for architectural alignment
+2. Discuss the approach with the contributor
+3. Once aligned, add the \`alignment-approved\` label to proceed with automated validation
 
 ---
 
@@ -112,7 +112,7 @@ For large PRs, we request early human review **before** running extensive automa
 *This is part of our Large PR workflow to ensure early alignment and efficient collaboration.*"
           
           gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body "$COMMENT"
-          echo "✅ Posted alignment request comment"
+          echo "Posted alignment request comment"
 
       - name: Add awaiting-alignment label
         env:
@@ -120,7 +120,7 @@ For large PRs, we request early human review **before** running extensive automa
           PR_NUMBER: ${{ steps.pr-info.outputs.pr-number }}
         run: |
           gh pr edit "$PR_NUMBER" --repo ${{ github.repository }} --add-label "awaiting-alignment"
-          echo "✅ Added awaiting-alignment label"
+          echo "Added awaiting-alignment label"
 
       - name: Notify squad for early alignment
         uses: ./.github/actions/notify-squad
@@ -194,7 +194,7 @@ For large PRs, we request early human review **before** running extensive automa
               yarn install --immutable || lint_failed=true
               yarn lint || lint_failed=true
             else
-              echo "⚠️ yarn not found, skipping frontend lint"
+              echo "WARNING: yarn not found, skipping frontend lint"
             fi
           fi
           
@@ -204,7 +204,7 @@ For large PRs, we request early human review **before** running extensive automa
               go fmt ./... || lint_failed=true
               go vet ./... || lint_failed=true
             else
-              echo "⚠️ go not found, skipping backend lint"
+              echo "WARNING: go not found, skipping backend lint"
             fi
           fi
           
@@ -229,7 +229,7 @@ For large PRs, we request early human review **before** running extensive automa
               # Run limited test set
               yarn test:ci --maxWorkers=2 || tests_failed=true
             else
-              echo "⚠️ Skipping frontend tests"
+              echo "WARNING: Skipping frontend tests"
             fi
           fi
           
@@ -239,7 +239,7 @@ For large PRs, we request early human review **before** running extensive automa
               # Run only short tests for large PRs
               go test -short -timeout=15m ./... || tests_failed=true
             else
-              echo "⚠️ Skipping backend tests"
+              echo "WARNING: Skipping backend tests"
             fi
           fi
           
@@ -282,28 +282,28 @@ For large PRs, we request early human review **before** running extensive automa
           AREAS: ${{ steps.detect-areas.outputs.areas }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            COMMENT="## ✅ Large PR Validation Passed (Post-Alignment)
+            COMMENT="## Large PR Validation Passed (Post-Alignment)
 
 Alignment has been approved and automated validation has passed!
 
 ### Validation Results:
-- ✅ Alignment approved by squad
-- ✅ PR requirements met
-- ✅ Tests exist for changed code
-- ✅ Basic linting checks passed
-- ✅ Smoke tests passed
-- 📍 Affected areas: \`$AREAS\`
+- Alignment approved by squad
+- PR requirements met
+- Tests exist for changed code
+- Basic linting checks passed
+- Smoke tests passed
+- Affected areas: \`$AREAS\`
 
 **Next steps:**
-1. 🤖 Cursor's Bugbot will perform lightweight architectural review
-2. 👥 Squad will conduct detailed human review
-3. 📝 Expect thorough discussion given the size of changes
+1. Cursor's Bugbot will perform lightweight architectural review
+2. Squad will conduct detailed human review
+3. Expect thorough discussion given the size of changes
 
 **Note**: Large PRs receive focused validation on critical issues and architecture, with detailed human review.
 
 Thank you for your contribution!"
           else
-            COMMENT="## ⚠️ Large PR Validation - Action Required (Post-Alignment)
+            COMMENT="## WARNING: Large PR Validation - Action Required (Post-Alignment)
 
 Alignment has been approved, but some automated checks did not pass:
 
@@ -311,10 +311,10 @@ Alignment has been approved, but some automated checks did not pass:
             
             if [ "$REQUIREMENTS_MET" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ PR requirements met"
+- PR requirements met"
             else
               COMMENT="$COMMENT
-- ❌ **PR requirements not met:**
+- **PR requirements not met:**
 \`\`\`
 $MISSING_REQUIREMENTS
 \`\`\`"
@@ -322,10 +322,10 @@ $MISSING_REQUIREMENTS
             
             if [ "$TESTS_EXIST" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Tests exist for changed code"
+- Tests exist for changed code"
             else
               COMMENT="$COMMENT
-- ❌ **Missing tests for:**
+- **Missing tests for:**
 \`\`\`
 $MISSING_TESTS
 \`\`\`
@@ -334,18 +334,18 @@ Please ensure test coverage for all significant changes."
             
             if [ "$LINT_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Basic linting checks passed"
+- Basic linting checks passed"
             else
               COMMENT="$COMMENT
-- ❌ **Linting checks failed** - Please fix critical linting issues"
+- **Linting checks failed** - Please fix critical linting issues"
             fi
             
             if [ "$TESTS_PASSED" = "true" ]; then
               COMMENT="$COMMENT
-- ✅ Smoke tests passed"
+- Smoke tests passed"
             else
               COMMENT="$COMMENT
-- ❌ **Tests failed** - Please ensure basic functionality works"
+- **Tests failed** - Please ensure basic functionality works"
             fi
             
             COMMENT="$COMMENT
@@ -381,10 +381,10 @@ Please ensure test coverage for all significant changes."
           ALL_PASSED: ${{ steps.evaluate.outputs.all-passed }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            echo "✅ Post-alignment validation passed - ready for AI architectural review and squad review - Squad notified"
+            echo "Post-alignment validation passed - ready for AI architectural review and squad review - Squad notified"
             exit 0
           else
-            echo "❌ Validation failed - action required"
+            echo "Validation failed - action required"
             exit 1
           fi
 

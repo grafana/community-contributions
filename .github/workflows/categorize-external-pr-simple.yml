@@ -84,7 +84,7 @@ jobs:
             "${{ steps.categorize.outputs.size }}" \
             "${{ steps.categorize.outputs.type }}" \
             "${{ github.repository }}"
-          echo "✅ PR categorized and comment posted"
+          echo "PR categorized and comment posted"
 
       - name: Post classification disagreement warning
         if: steps.categorize.outputs.disagreement == 'true'

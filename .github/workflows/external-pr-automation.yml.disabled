@@ -30,7 +30,7 @@ jobs:
           if [ "${{ github.event.pull_request.author_association }}" != "MEMBER" ] && \
              [ "${{ github.event.pull_request.author_association }}" != "OWNER" ]; then
             echo "is-external=true" >> "$GITHUB_OUTPUT"
-            echo "✅ External PR detected"
+            echo "External PR detected"
           else
             echo "is-external=false" >> "$GITHUB_OUTPUT"
             echo "ℹ️  Internal PR - skipping external workflow"
