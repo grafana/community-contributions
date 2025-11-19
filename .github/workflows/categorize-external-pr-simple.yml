@@ -86,3 +86,37 @@ jobs:
             "${{ github.repository }}"
           echo "✅ PR categorized and comment posted"
 
+      - name: Post classification disagreement warning
+        if: steps.categorize.outputs.disagreement == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LABEL_TYPE: ${{ steps.categorize.outputs.disagreement-label }}
+          AI_TYPE: ${{ steps.categorize.outputs.disagreement-ai }}
+        run: |
+          cat > /tmp/disagreement-warning.md << 'EOF'
+## Type Classification Disagreement
+
+Our AI analysis suggests a different classification than the existing label:
+
+| Source | Classification |
+|--------|----------------|
+| Existing label | `type/LABEL_TYPE` (currently applied) |
+| AI analysis | `type/AI_TYPE` |
+
+**What this means:**
+- The existing label will be kept (safer default)
+- This is informational for maintainer awareness
+- AI analyzed: title, description, and changed files
+
+**Action:** If AI is correct, update label to `type/AI_TYPE`
+
+This check helps catch labeling errors from the pr-commands automation or race conditions.
+EOF
+          
+          sed -i "s/LABEL_TYPE/$LABEL_TYPE/g" /tmp/disagreement-warning.md
+          sed -i "s/AI_TYPE/$AI_TYPE/g" /tmp/disagreement-warning.md
+          
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/disagreement-warning.md
+          echo "Posted disagreement warning for PR #$PR_NUMBER"
+

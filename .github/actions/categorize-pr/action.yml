@@ -20,7 +20,7 @@ outputs:
     description: 'Detected size category (small/medium/large)'
     value: ${{ steps.categorize.outputs.size }}
   type:
-    description: 'Detected type category (docs/bugfix/refactor/feature)'
+    description: 'Detected type category (docs/bugfix/feature)'
     value: ${{ steps.categorize.outputs.type }}
   size-label:
     description: 'Size label to apply'
@@ -28,9 +28,15 @@ outputs:
   type-label:
     description: 'Type label to apply'
     value: ${{ steps.categorize.outputs.type-label }}
-  conflict:
-    description: 'Whether there is a conflict between contributor selection and auto-detection'
-    value: ${{ steps.categorize.outputs.conflict }}
+  disagreement:
+    description: 'Whether label and AI classifications disagree'
+    value: ${{ steps.categorize.outputs.disagreement }}
+  disagreement-label:
+    description: 'Label-based classification when disagreement occurs'
+    value: ${{ steps.categorize.outputs.disagreement-label }}
+  disagreement-ai:
+    description: 'AI-based classification when disagreement occurs'
+    value: ${{ steps.categorize.outputs.disagreement-ai }}
 
 runs:
   using: 'composite'
@@ -79,112 +85,122 @@ runs:
         PR_TITLE: ${{ steps.pr-details.outputs.pr-title }}
         OPENAI_API_KEY: ${{ inputs.openai-api-key }}
       run: |
-        # Determine size
-        if [ "$LINES_CHANGED" -lt 100 ] && [ "$FILES_COUNT" -le 3 ]; then
-          SIZE="small"
-        elif [ "$LINES_CHANGED" -lt 500 ] && [ "$FILES_COUNT" -le 10 ]; then
+        # Determine size with validation
+        if [ -z "$LINES_CHANGED" ] || [ -z "$FILES_COUNT" ]; then
+          echo "ERROR: Missing size metrics, defaulting to medium"
           SIZE="medium"
         else
-          SIZE="large"
+          if [ "$LINES_CHANGED" -lt 100 ] && [ "$FILES_COUNT" -le 3 ]; then
+            SIZE="small"
+          elif [ "$LINES_CHANGED" -lt 500 ] && [ "$FILES_COUNT" -le 10 ]; then
+            SIZE="medium"
+          else
+            SIZE="large"
+          fi
         fi
         
         echo "size=$SIZE" >> "$GITHUB_OUTPUT"
         echo "size-label=size:$SIZE" >> "$GITHUB_OUTPUT"
         
         # Determine type from existing labels first
-        TYPE=""
-        if echo "$EXISTING_LABELS" | grep -q "type/docs\|area/docs"; then
-          TYPE="docs"
-        elif echo "$EXISTING_LABELS" | grep -q "type/bug"; then
-          TYPE="bugfix"
-        elif echo "$EXISTING_LABELS" | grep -q "type/feature"; then
-          TYPE="feature"
-        elif echo "$EXISTING_LABELS" | grep -q "type/refactor"; then
-          TYPE="refactor"
+        # Priority: bug > feature > docs (refactor removed - too rare for external PRs)
+        LABEL_TYPE=""
+        
+        # Add commas for exact matching
+        labels_with_bounds=",$EXISTING_LABELS,"
+        
+        if echo "$labels_with_bounds" | grep -q ",type/bug,"; then
+          LABEL_TYPE="bugfix"
+        elif echo "$labels_with_bounds" | grep -q ",type/feature,"; then
+          LABEL_TYPE="feature"
+        elif echo "$labels_with_bounds" | grep -q ",type/docs," || echo "$labels_with_bounds" | grep -q ",area/docs,"; then
+          LABEL_TYPE="docs"
         fi
         
-        # Fallback to AI-powered classification if no type labels exist
-        if [ -z "$TYPE" ]; then
-          # Sanitize PR body: strip HTML comments and truncate
-          cleaned_body=$(echo "$PR_BODY" | sed 's/<!--.*-->//g' | head -c 1500)
+        # Always run AI classification for validation (no HTML stripping needed)
+        AI_TYPE=""
+        
+        if [ -n "$OPENAI_API_KEY" ]; then
+          echo "Using AI classification..."
           
-          # Try LLM classification first if API key is available
-          if [ -n "$OPENAI_API_KEY" ]; then
-            echo "Using AI classification..."
-            
-            # Build JSON payload using jq to avoid escaping issues
-            # Include file paths for context
-            user_content="Files changed:\n${FILE_PATHS}\n\nTitle: ${PR_TITLE}\n\nDescription: ${cleaned_body}"
-            
-            payload=$(jq -n \
-              --arg model "gpt-4o-mini" \
-              --arg system_prompt "You are an expert Grafana engineer helping external contributors get their pull requests ready for review. Your task is to accurately classify each PR so it can be routed to the right team and reviewed efficiently.\n\nClassify this PR into ONE category:\n- docs: Changes to documentation, comments, or markdown files\n- bugfix: Fixes broken functionality, errors, or incorrect behavior\n- refactor: Improves or reorganizes existing code/UI without adding new capabilities\n- feature: Adds new functionality or capabilities that didn't exist before\n\nConsider the file paths, title, and description together. Respond with only one word." \
-              --arg user_msg "$user_content" \
-              '{
-                model: $model,
-                messages: [
-                  {role: "system", content: $system_prompt},
-                  {role: "user", content: $user_msg}
-                ],
-                temperature: 0.2,
-                max_tokens: 5
-              }')
-            
-            # Call OpenAI API
-            api_response=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $OPENAI_API_KEY" \
-              -d "$payload")
-            
-            # Debug: show API response (for troubleshooting)
-            echo "API response: $api_response"
-            
-            # Check for API errors
-            api_error=$(echo "$api_response" | jq -r '.error.message // ""')
-            if [ -n "$api_error" ]; then
-              echo "OpenAI API error: $api_error"
-              TYPE="feature"
-            else
-              # Parse and validate response
-              llm_type=$(echo "$api_response" | jq -r '.choices[0].message.content // ""' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-              
-              if echo "$llm_type" | grep -qE "^(docs|bugfix|feature|refactor)$"; then
-                TYPE="$llm_type"
-                echo "AI classified as: $TYPE"
-              else
-                echo "AI classification failed (response: $llm_type), defaulting to feature"
-                TYPE="feature"
-              fi
-            fi
+          # Truncate description to 2000 chars (no HTML stripping)
+          truncated_body=$(echo "$PR_BODY" | head -c 2000)
+          
+          # Build JSON payload using jq to avoid escaping issues
+          user_content="Files changed:\n${FILE_PATHS}\n\nTitle: ${PR_TITLE}\n\nDescription: ${truncated_body}"
+          
+          payload=$(jq -n \
+            --arg model "gpt-4o-mini" \
+            --arg system_prompt "You are an expert Grafana engineer helping external contributors get their pull requests ready for review. Your task is to accurately classify each PR so it can be routed to the right team and reviewed efficiently.\n\nClassify this PR into ONE category:\n- docs: Changes to documentation, comments, or markdown files\n- bugfix: Fixes broken functionality, errors, or incorrect behavior\n- feature: Adds new functionality or capabilities that didn't exist before\n\nConsider the file paths, title, and description together. Respond with only one word." \
+            --arg user_msg "$user_content" \
+            '{
+              model: $model,
+              messages: [
+                {role: "system", content: $system_prompt},
+                {role: "user", content: $user_msg}
+              ],
+              temperature: 0.2,
+              max_tokens: 5
+            }')
+          
+          # Call OpenAI API
+          api_response=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "$payload")
+          
+          # Check for API errors
+          api_error=$(echo "$api_response" | jq -r '.error.message // ""')
+          if [ -n "$api_error" ]; then
+            echo "OpenAI API error: $api_error"
+            AI_TYPE=""
           else
-            echo "No API key - defaulting to feature"
-            TYPE="feature"
+            # Parse and validate response (updated regex - no refactor)
+            llm_type=$(echo "$api_response" | jq -r '.choices[0].message.content // ""' | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+            
+            if echo "$llm_type" | grep -qE "^(docs|bugfix|feature)$"; then
+              AI_TYPE="$llm_type"
+              echo "AI classified as: $AI_TYPE"
+            else
+              echo "AI classification failed (response: $llm_type), no AI suggestion"
+              AI_TYPE=""
+            fi
           fi
+        else
+          echo "No API key - AI validation skipped"
+          AI_TYPE=""
         fi
         
-        # Ensure TYPE is set (should never be empty, but safety check)
-        if [ -z "$TYPE" ]; then
-          echo "ERROR: TYPE is empty after scoring! Defaulting to feature"
+        # Compare and resolve label vs AI classification
+        if [ -n "$LABEL_TYPE" ] && [ -n "$AI_TYPE" ] && [ "$LABEL_TYPE" != "$AI_TYPE" ]; then
+          # Disagreement: keep existing label, flag for warning
+          echo "WARNING: Classification mismatch - Label: $LABEL_TYPE vs AI: $AI_TYPE"
+          echo "disagreement=true" >> "$GITHUB_OUTPUT"
+          echo "disagreement-label=$LABEL_TYPE" >> "$GITHUB_OUTPUT"
+          echo "disagreement-ai=$AI_TYPE" >> "$GITHUB_OUTPUT"
+          TYPE="$LABEL_TYPE"
+          
+        elif [ -n "$LABEL_TYPE" ]; then
+          # Label exists (AI agrees or didn't run)
+          echo "Using existing label: $LABEL_TYPE"
+          TYPE="$LABEL_TYPE"
+          echo "disagreement=false" >> "$GITHUB_OUTPUT"
+          
+        elif [ -n "$AI_TYPE" ]; then
+          # No label exists, use AI classification
+          echo "No existing label - using AI: $AI_TYPE"
+          TYPE="$AI_TYPE"
+          echo "disagreement=false" >> "$GITHUB_OUTPUT"
+          
+        else
+          # Fallback: no label and AI failed/skipped
+          echo "No label and AI unavailable - defaulting to feature"
           TYPE="feature"
+          echo "disagreement=false" >> "$GITHUB_OUTPUT"
         fi
         
         echo "type=$TYPE" >> "$GITHUB_OUTPUT"
         echo "type-label=pr-category:$TYPE" >> "$GITHUB_OUTPUT"
         
-        # Check for conflicts with contributor selection
-        CONFLICT="false"
-        if echo "$PR_BODY" | grep -q "Small" && [ "$SIZE" != "small" ]; then
-          CONFLICT="true"
-        elif echo "$PR_BODY" | grep -q "Medium" && [ "$SIZE" != "medium" ]; then
-          CONFLICT="true"
-        elif echo "$PR_BODY" | grep -q "Large" && [ "$SIZE" != "large" ]; then
-          CONFLICT="true"
-        fi
-        
-        echo "conflict=$CONFLICT" >> "$GITHUB_OUTPUT"
-        
         echo "Categorized as: size=$SIZE, type=$TYPE"
-        if [ "$CONFLICT" = "true" ]; then
-          echo "WARNING: Conflict detected with contributor's self-selection"
-        fi
 
