@@ -6,6 +6,7 @@ on:
       - opened
       - reopened
       - edited
+      - labeled
 
 permissions:
   pull-requests: write
@@ -75,6 +76,7 @@ jobs:
           echo "Applied labels: $SIZE_LABEL, $TYPE_LABEL"
 
       - name: Post automated comment
+        if: github.event.action != 'labeled'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -85,6 +87,27 @@ jobs:
             "${{ steps.categorize.outputs.type }}" \
             "${{ github.repository }}"
           echo "PR categorized and comment posted"
+
+      - name: Post label correction confirmation
+        if: github.event.action == 'labeled' && steps.categorize.outputs.disagreement == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TYPE: ${{ steps.categorize.outputs.type }}
+          SIZE: ${{ steps.categorize.outputs.size }}
+        run: |
+          {
+            echo "## Label updated"
+            echo ""
+            echo "The type label has been updated and now matches our AI classification."
+            echo ""
+            echo "Current classification: \`type/$TYPE\` (size: $SIZE)"
+            echo ""
+            echo "The PR will now follow the appropriate validation workflow for this type and size."
+          } > /tmp/correction-comment.md
+          
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/correction-comment.md
+          echo "Posted label correction confirmation"
 
       - name: Post classification disagreement warning
         if: steps.categorize.outputs.disagreement == 'true'
