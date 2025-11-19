@@ -99,10 +99,8 @@ jobs:
 
 Our AI analysis suggests a different classification than the existing label:
 
-| Source | Classification |
-|--------|----------------|
-| Existing label | `type/LABEL_TYPE` (currently applied) |
-| AI analysis | `type/AI_TYPE` |
+**Existing label:** `type/LABEL_TYPE` (currently applied)  
+**AI suggestion:** `type/AI_TYPE`
 
 **What this means:**
 - The existing label will be kept (safer default)
