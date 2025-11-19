@@ -28,15 +28,6 @@ outputs:
   type-label:
     description: 'Type label to apply'
     value: ${{ steps.categorize.outputs.type-label }}
-  disagreement:
-    description: 'Whether label and AI classifications disagree'
-    value: ${{ steps.categorize.outputs.disagreement }}
-  disagreement-label:
-    description: 'Label-based classification when disagreement occurs'
-    value: ${{ steps.categorize.outputs.disagreement-label }}
-  disagreement-ai:
-    description: 'AI-based classification when disagreement occurs'
-    value: ${{ steps.categorize.outputs.disagreement-ai }}
 
 runs:
   using: 'composite'
@@ -172,32 +163,21 @@ runs:
           AI_TYPE=""
         fi
         
-        # Compare and resolve label vs AI classification
-        if [ -n "$LABEL_TYPE" ] && [ -n "$AI_TYPE" ] && [ "$LABEL_TYPE" != "$AI_TYPE" ]; then
-          # Disagreement: keep existing label, flag for warning
-          echo "WARNING: Classification mismatch - Label: $LABEL_TYPE vs AI: $AI_TYPE"
-          echo "disagreement=true" >> "$GITHUB_OUTPUT"
-          echo "disagreement-label=$LABEL_TYPE" >> "$GITHUB_OUTPUT"
-          echo "disagreement-ai=$AI_TYPE" >> "$GITHUB_OUTPUT"
-          TYPE="$LABEL_TYPE"
-          
-        elif [ -n "$LABEL_TYPE" ]; then
-          # Label exists (AI agrees or didn't run)
+        # Determine final type (trust maintainers, use AI as fallback)
+        if [ -n "$LABEL_TYPE" ]; then
+          # Label exists - trust it (set by maintainer or automation)
           echo "Using existing label: $LABEL_TYPE"
           TYPE="$LABEL_TYPE"
-          echo "disagreement=false" >> "$GITHUB_OUTPUT"
           
         elif [ -n "$AI_TYPE" ]; then
           # No label exists, use AI classification
           echo "No existing label - using AI: $AI_TYPE"
           TYPE="$AI_TYPE"
-          echo "disagreement=false" >> "$GITHUB_OUTPUT"
           
         else
           # Fallback: no label and AI failed/skipped
           echo "No label and AI unavailable - defaulting to feature"
           TYPE="feature"
-          echo "disagreement=false" >> "$GITHUB_OUTPUT"
         fi
         
         echo "type=$TYPE" >> "$GITHUB_OUTPUT"

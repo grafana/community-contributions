@@ -79,68 +79,17 @@ jobs:
         if: github.event.action != 'labeled'
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          TYPE: ${{ steps.categorize.outputs.type }}
         run: |
           chmod +x .github/scripts/post-pr-comment.sh
           .github/scripts/post-pr-comment.sh \
-            "$PR_NUMBER" \
+            "${{ github.event.pull_request.number }}" \
             "${{ steps.categorize.outputs.size }}" \
-            "$TYPE" \
+            "${{ steps.categorize.outputs.type }}" \
             "${{ github.repository }}"
           echo "PR categorized and comment posted"
-          
-          # Check for multiple type labels and append warning if needed
-          all_labels=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json labels --jq '.labels[].name')
-          type_labels=$(echo "$all_labels" | grep -E "^type/(bug|feature|docs)$" || true)
-          type_count=$(echo "$type_labels" | grep -v '^$' | wc -l)
-          
-          if [ "$type_count" -gt 1 ]; then
-            # Map internal type name to label name
-            case "$TYPE" in
-              bugfix) DISPLAY_TYPE="bug" ;;
-              feature) DISPLAY_TYPE="feature" ;;
-              docs) DISPLAY_TYPE="docs" ;;
-              *) DISPLAY_TYPE="$TYPE" ;;
-            esac
-            
-            {
-              echo ""
-              echo "---"
-              echo ""
-              echo "**Note:** Multiple type labels detected on this PR. Using \`type/$DISPLAY_TYPE\` based on priority (bug > feature > docs)."
-              echo ""
-              echo "Please remove conflicting labels to avoid confusion:"
-              echo ""
-              echo "$type_labels" | while read -r label; do
-                if [ -n "$label" ]; then
-                  case "$TYPE" in
-                    bugfix)
-                      if [ "$label" != "type/bug" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                    feature)
-                      if [ "$label" != "type/feature" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                    docs)
-                      if [ "$label" != "type/docs" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                  esac
-                fi
-              done
-            } > /tmp/multiple-labels-warning.md
-            
-            gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/multiple-labels-warning.md
-            echo "Posted multiple labels warning"
-          fi
 
-      - name: Post label correction confirmation
-        if: github.event.action == 'labeled' && steps.categorize.outputs.disagreement == 'false'
+      - name: Post label update confirmation
+        if: github.event.action == 'labeled'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -155,94 +104,14 @@ jobs:
             *) DISPLAY_TYPE="$TYPE" ;;
           esac
           
-          # Check for multiple type labels
-          all_labels=$(gh pr view "$PR_NUMBER" --repo ${{ github.repository }} --json labels --jq '.labels[].name')
-          type_labels=$(echo "$all_labels" | grep -E "^type/(bug|feature|docs)$" || true)
-          type_count=$(echo "$type_labels" | grep -v '^$' | wc -l)
-          
           {
-            echo "## Label updated"
+            echo "## Categorization updated"
             echo ""
-            echo "The type label has been updated and now matches our AI classification."
+            echo "Labels have been updated. Current classification: \`type/$DISPLAY_TYPE\` (size: $SIZE)"
             echo ""
-            echo "Current classification: \`type/$DISPLAY_TYPE\` (size: $SIZE)"
-            echo ""
-            
-            if [ "$type_count" -gt 1 ]; then
-              echo "**Note:** Multiple type labels detected. Please remove conflicting labels to avoid confusion:"
-              echo ""
-              echo "$type_labels" | while read -r label; do
-                if [ -n "$label" ]; then
-                  # Check if this is NOT the correct label based on TYPE
-                  case "$TYPE" in
-                    bugfix)
-                      if [ "$label" != "type/bug" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                    feature)
-                      if [ "$label" != "type/feature" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                    docs)
-                      if [ "$label" != "type/docs" ]; then
-                        echo "- Remove: \`$label\`"
-                      fi
-                      ;;
-                  esac
-                fi
-              done
-              echo ""
-            fi
-            
-            echo "The PR will now follow the appropriate validation workflow for this type and size."
-          } > /tmp/correction-comment.md
+            echo "The appropriate validation workflow will now run for this PR."
+          } > /tmp/update-comment.md
           
-          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/correction-comment.md
-          echo "Posted label correction confirmation"
-
-      - name: Post classification disagreement warning
-        if: steps.categorize.outputs.disagreement == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          LABEL_TYPE: ${{ steps.categorize.outputs.disagreement-label }}
-          AI_TYPE: ${{ steps.categorize.outputs.disagreement-ai }}
-        run: |
-          # Map internal type names to actual label names
-          case "$LABEL_TYPE" in
-            bugfix) DISPLAY_LABEL="bug" ;;
-            feature) DISPLAY_LABEL="feature" ;;
-            docs) DISPLAY_LABEL="docs" ;;
-            *) DISPLAY_LABEL="$LABEL_TYPE" ;;
-          esac
-          
-          case "$AI_TYPE" in
-            bugfix) DISPLAY_AI="bug" ;;
-            feature) DISPLAY_AI="feature" ;;
-            docs) DISPLAY_AI="docs" ;;
-            *) DISPLAY_AI="$AI_TYPE" ;;
-          esac
-          
-          {
-            echo "## Type classification disagreement"
-            echo ""
-            echo "Our AI analysis suggests a different classification than the existing label:"
-            echo ""
-            echo "Existing label: \`type/$DISPLAY_LABEL\` (currently applied)"
-            echo "AI suggestion: \`type/$DISPLAY_AI\`"
-            echo ""
-            echo "What this means:"
-            echo "- The existing label will be kept (safer default)"
-            echo "- This is informational for maintainer awareness"
-            echo "- AI analyzed: title, description, and changed files"
-            echo ""
-            echo "Action: If AI is correct, update label to \`type/$DISPLAY_AI\`"
-            echo ""
-            echo "This check helps catch labeling errors to ensure the PR gets into the right validation workflow."
-          } > /tmp/disagreement-warning.md
-          
-          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/disagreement-warning.md
-          echo "Posted disagreement warning for PR #$PR_NUMBER"
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/update-comment.md
+          echo "Posted label update confirmation"
 

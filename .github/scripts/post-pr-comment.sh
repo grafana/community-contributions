@@ -58,6 +58,16 @@ fi
 # Add common footer sections
 cat >> /tmp/pr-analysis-comment.md << 'EOF'
 
+**To correct this categorization**
+
+If the size or type categorization seems incorrect, a maintainer can update it by adding the correct labels:
+- **Type labels:** `type/bug`, `type/feature`, or `type/docs`
+- **Size labels:** `size:small`, `size:medium`, or `size:large`
+
+When labels are updated, the workflow will automatically re-run and trigger the appropriate validation steps for the new classification.
+
+---
+
 **Resources**
 - [Contributing guidelines](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md)
 - [Create a pull request](https://github.com/grafana/grafana/blob/main/contribute/create-pull-request.md)
