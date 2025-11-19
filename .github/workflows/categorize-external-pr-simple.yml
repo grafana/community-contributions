@@ -94,26 +94,23 @@ jobs:
           LABEL_TYPE: ${{ steps.categorize.outputs.disagreement-label }}
           AI_TYPE: ${{ steps.categorize.outputs.disagreement-ai }}
         run: |
-          cat > /tmp/disagreement-warning.md << 'EOFMARKER'
-          ## Type Classification Disagreement
-          
-          Our AI analysis suggests a different classification than the existing label:
-          
-          Existing label: type/LABEL_TYPE (currently applied)
-          AI suggestion: type/AI_TYPE
-          
-          What this means:
-          - The existing label will be kept (safer default)
-          - This is informational for maintainer awareness
-          - AI analyzed: title, description, and changed files
-          
-          Action: If AI is correct, update label to type/AI_TYPE
-          
-          This check helps catch labeling errors from the pr-commands automation or race conditions.
-          EOFMARKER
-          
-          sed -i "s/LABEL_TYPE/$LABEL_TYPE/g" /tmp/disagreement-warning.md
-          sed -i "s/AI_TYPE/$AI_TYPE/g" /tmp/disagreement-warning.md
+          {
+            echo "## Type Classification Disagreement"
+            echo ""
+            echo "Our AI analysis suggests a different classification than the existing label:"
+            echo ""
+            echo "Existing label: type/$LABEL_TYPE (currently applied)"
+            echo "AI suggestion: type/$AI_TYPE"
+            echo ""
+            echo "What this means:"
+            echo "- The existing label will be kept (safer default)"
+            echo "- This is informational for maintainer awareness"
+            echo "- AI analyzed: title, description, and changed files"
+            echo ""
+            echo "Action: If AI is correct, update label to type/$AI_TYPE"
+            echo ""
+            echo "This check helps catch labeling errors from the pr-commands automation or race conditions."
+          } > /tmp/disagreement-warning.md
           
           gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/disagreement-warning.md
           echo "Posted disagreement warning for PR #$PR_NUMBER"
