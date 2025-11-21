@@ -123,6 +123,9 @@ jobs:
         if: github.event.action != 'labeled' && steps.check_human.outputs.human_change != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          OVERRIDE_REASON: ${{ steps.categorize.outputs.override-reason }}
+          ORIGINAL_LABEL: ${{ steps.categorize.outputs.original-label-type }}
+          AI_CLASSIFIED: ${{ steps.categorize.outputs.ai-classified-type }}
         run: |
           chmod +x .github/scripts/post-pr-comment.sh
           .github/scripts/post-pr-comment.sh \

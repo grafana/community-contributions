@@ -28,6 +28,15 @@ outputs:
   type-label:
     description: 'Type label to apply'
     value: ${{ steps.categorize.outputs.type-label }}
+  override-reason:
+    description: 'Reason for label override (if applied)'
+    value: ${{ steps.categorize.outputs.override-reason }}
+  original-label-type:
+    description: 'Original label type before override'
+    value: ${{ steps.categorize.outputs.original-label-type }}
+  ai-classified-type:
+    description: 'AI classified type'
+    value: ${{ steps.categorize.outputs.ai-classified-type }}
 
 runs:
   using: 'composite'
@@ -163,8 +172,16 @@ runs:
           AI_TYPE=""
         fi
         
-        # Determine final type (trust maintainers, use AI as fallback)
-        if [ -n "$LABEL_TYPE" ]; then
+        # Determine final type with smart override for large PRs
+        OVERRIDE_REASON=""
+        
+        # Smart override: For large PRs, trust AI over docs label when they conflict
+        if [ "$SIZE" = "large" ] && [ "$LABEL_TYPE" = "docs" ] && [ "$AI_TYPE" = "feature" ]; then
+          TYPE="feature"
+          OVERRIDE_REASON="ai-feature-override"
+          echo "Large PR with docs label but AI classified as feature - using AI classification"
+          
+        elif [ -n "$LABEL_TYPE" ]; then
           # Label exists - trust it (set by maintainer or automation)
           echo "Using existing label: $LABEL_TYPE"
           TYPE="$LABEL_TYPE"
@@ -181,6 +198,9 @@ runs:
         fi
         
         echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+        echo "override-reason=$OVERRIDE_REASON" >> "$GITHUB_OUTPUT"
+        echo "original-label-type=$LABEL_TYPE" >> "$GITHUB_OUTPUT"
+        echo "ai-classified-type=$AI_TYPE" >> "$GITHUB_OUTPUT"
         
         # Map internal type names to Grafana's standard label format
         case "$TYPE" in

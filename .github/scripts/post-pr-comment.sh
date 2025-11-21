@@ -24,6 +24,15 @@ Your PR has been categorized based on its size and type:
 
 EOF
 
+# Add override message if applicable (only for large PRs with AI override)
+if [ -n "$OVERRIDE_REASON" ] && [ "$OVERRIDE_REASON" != "" ]; then
+  cat >> /tmp/pr-analysis-comment.md << EOF
+
+> **Note:** This PR was originally labeled as \`type/$ORIGINAL_LABEL\` but appears to be a $AI_CLASSIFIED PR with documentation updates. Based on AI analysis and PR size, we've classified it as \`type/$AI_CLASSIFIED\` for appropriate validation. If you disagree, a maintainer can manually update the labels (see correction instructions below).
+
+EOF
+fi
+
 # Add size-specific Review Process section
 if [ "$SIZE" = "small" ]; then
   cat >> /tmp/pr-analysis-comment.md << 'EOF'
