@@ -143,3 +143,4 @@ runs:
         echo "✅ Detected areas: $areas_str"
         echo "✅ Primary area: $primary_area"
 
+
