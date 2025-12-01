@@ -2,7 +2,7 @@
 Hey! Thanks for improving our docs!
 
 ### Automated checks (we monitor these)
-- [ ] Vale prose linting
+- [ ] Lint (docs and frontend)
 
 ### What we look for
 - Content is clear and helpful
@@ -16,10 +16,9 @@ Hey! Thanks for improving our docs!
 Thanks for fixing this!
 
 ### Automated checks (we monitor these)
-- [ ] Frontend linting
-- [ ] Backend linting  
-- [ ] Frontend tests
-- [ ] Backend tests
+- [ ] Lint (frontend)
+- [ ] lint-go (backend)
+- [ ] All backend unit tests complete
 
 ### What we look for
 - Tests verify the fix works
@@ -34,10 +33,9 @@ Push changes and we'll update this checklist automatically.
 Excited about this feature!
 
 ### Automated checks (we monitor these)
-- [ ] Frontend linting
-- [ ] Backend linting
-- [ ] Frontend tests
-- [ ] Backend tests
+- [ ] Lint (frontend)
+- [ ] lint-go (backend)
+- [ ] All backend unit tests complete
 
 ### What we look for
 - Tests cover new functionality

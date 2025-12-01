@@ -11,7 +11,7 @@ For large documentation changes, we first want to align on the structure and app
 ### Phase 2: Validation (after alignment)
 
 #### Automated checks (we monitor these)
-- [ ] Vale prose linting
+- [ ] Lint (docs and frontend)
 
 #### What we look for
 
@@ -33,9 +33,9 @@ For large fixes, we want to ensure the approach is sound before detailed validat
 ### Phase 2: Validation (after alignment)
 
 #### Automated checks (we monitor these)
-- [ ] Frontend linting
-- [ ] Backend linting  
-- [ ] Critical tests (focused on the fix)
+- [ ] Lint (frontend)
+- [ ] lint-go (backend)
+- [ ] All backend unit tests complete
 
 #### What we look for
 - Tests verify the fix comprehensively
@@ -57,9 +57,9 @@ For large features, we want to align on the implementation before detailed valid
 ### Phase 2: Validation (after alignment)
 
 #### Automated checks (we monitor these)
-- [ ] Frontend linting
-- [ ] Backend linting  
-- [ ] Critical tests (focused on core functionality)
+- [ ] Lint (frontend)
+- [ ] lint-go (backend)
+- [ ] All backend unit tests complete
 
 #### What we look for
 - Core functionality is well-tested
