@@ -131,7 +131,7 @@ Files changed: $FILES
 PR Description:
 $PR_BODY
 
-Diff:
+Code changes:
 $DIFF
 
 Please provide friendly, concise feedback focused on code quality and tests."
