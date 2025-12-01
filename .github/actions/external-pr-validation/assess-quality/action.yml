@@ -124,7 +124,7 @@ runs:
         fi
         
         # Build user message with PR context using heredoc
-        read -r -d '' USER_MSG << ENDOFMSG || true
+        USER_MSG=$(cat <<EOF
 Title: $PR_TITLE
 
 Files changed: $FILES
@@ -136,7 +136,8 @@ Code changes:
 $DIFF
 
 Please provide friendly, concise feedback focused on code quality and tests.
-ENDOFMSG
+EOF
+)
         
         # Build JSON payload using jq
         payload=$(jq -n \
