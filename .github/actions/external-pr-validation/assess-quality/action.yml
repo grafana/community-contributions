@@ -123,21 +123,8 @@ runs:
           FOCUS="$FOCUS This is a LARGE PR (post-alignment), so focus on critical issues only."
         fi
         
-        # Build user message with PR context using heredoc
-        USER_MSG=$(cat <<EOF
-Title: $PR_TITLE
-
-Files changed: $FILES
-
-PR Description:
-$PR_BODY
-
-Code changes:
-$DIFF
-
-Please provide friendly, concise feedback focused on code quality and tests.
-EOF
-)
+        # Build user message with PR context
+        USER_MSG=$(printf "Title: %s\n\nFiles changed: %s\n\nPR Description:\n%s\n\nCode changes:\n%s\n\nPlease provide friendly, concise feedback focused on code quality and tests." "$PR_TITLE" "$FILES" "$PR_BODY" "$DIFF")
         
         # Build JSON payload using jq
         payload=$(jq -n \
