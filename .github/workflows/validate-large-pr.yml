@@ -125,13 +125,13 @@ jobs:
               ;;
           esac
           
-          # Build comment using heredoc
-          COMMENT=$(cat <<EOF
-## ${TYPE_EMOJI} Large ${TYPE_NAME} PR - Early Alignment Required
+          # Build comment line by line to avoid YAML heredoc issues
+          cat > /tmp/alignment-comment.md << 'MSGEND'
+## EMOJI_PLACEHOLDER Large TYPE_PLACEHOLDER PR - Early Alignment Required
 
 Thank you for this substantial contribution!
 
-### Why Early Alignment?
+### Why early alignment?
 
 For large PRs, we request early human review **before** running extensive automated validation. This helps:
 - Ensure the approach aligns with project goals
@@ -139,9 +139,9 @@ For large PRs, we request early human review **before** running extensive automa
 - Provide early feedback to guide your work
 - Save everyone time!
 
-### ${ALIGNMENT_FOCUS}
+FOCUS_PLACEHOLDER
 
-### Next Steps:
+### Next steps:
 
 **For you (the contributor):**
 1. Please wait for a squad member to review the approach
@@ -151,17 +151,21 @@ For large PRs, we request early human review **before** running extensive automa
 **For squad members:**
 1. Please review this PR for alignment
 2. Discuss the approach with the contributor
-3. Once aligned, add the \`alignment-approved\` label
+3. Once aligned, add the alignment-approved label
 
 ---
 
 A squad notification has been sent. Thank you for your patience!
 
-*This is part of our Large PR workflow to ensure early alignment and efficient collaboration.*
-EOF
-)
+*This is part of our large PR workflow to ensure early alignment and efficient collaboration.*
+MSGEND
           
-          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body "$COMMENT"
+          # Replace placeholders
+          sed -i "s/EMOJI_PLACEHOLDER/$TYPE_EMOJI/g" /tmp/alignment-comment.md
+          sed -i "s/TYPE_PLACEHOLDER/$TYPE_NAME/g" /tmp/alignment-comment.md
+          sed -i "s|FOCUS_PLACEHOLDER|### $ALIGNMENT_FOCUS|g" /tmp/alignment-comment.md
+          
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body-file /tmp/alignment-comment.md
           echo "✅ Posted alignment request comment"
 
       - name: Add awaiting-alignment label
