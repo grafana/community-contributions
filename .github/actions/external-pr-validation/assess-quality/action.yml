@@ -39,10 +39,10 @@ runs:
       run: |
         if [ -z "$API_KEY" ]; then
           echo "has-key=false" >> "$GITHUB_OUTPUT"
-          echo "⚠️ OpenAI API key not configured - skipping AI assessment"
+          echo "WARNING: OpenAI API key not configured - skipping AI assessment"
         else
           echo "has-key=true" >> "$GITHUB_OUTPUT"
-          echo "✅ OpenAI API key available - running AI assessment"
+          echo "OpenAI API key available - running AI assessment"
         fi
 
     - name: Get PR content
@@ -162,7 +162,7 @@ ENDOFMSG
         # Check for API errors
         api_error=$(echo "$response" | jq -r '.error.message // ""')
         if [ -n "$api_error" ]; then
-          echo "⚠️ OpenAI API error: $api_error"
+          echo "WARNING: OpenAI API error: $api_error"
           echo "feedback-text=*AI assessment encountered an error. Human reviewers will check code quality and tests.*" >> "$GITHUB_OUTPUT"
           echo "has-concerns=false" >> "$GITHUB_OUTPUT"
           echo "summary=AI assessment error" >> "$GITHUB_OUTPUT"
@@ -173,14 +173,14 @@ ENDOFMSG
         feedback=$(echo "$response" | jq -r '.choices[0].message.content // ""')
         
         if [ -z "$feedback" ]; then
-          echo "⚠️ Empty response from AI"
+          echo "WARNING: Empty response from AI"
           echo "feedback-text=*AI assessment returned no feedback. Human reviewers will check code quality and tests.*" >> "$GITHUB_OUTPUT"
           echo "has-concerns=false" >> "$GITHUB_OUTPUT"
           echo "summary=AI assessment empty" >> "$GITHUB_OUTPUT"
           exit 0
         fi
         
-        echo "✅ AI assessment complete"
+        echo "AI assessment complete"
         
         # Detect if there are concerns (look for warning keywords)
         has_concerns=false

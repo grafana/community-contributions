@@ -77,9 +77,8 @@ runs:
             # Workflow hasn't run yet
             status="pending"
             conclusion="none"
-            emoji="⏳"
             results+=("{\"workflow\":\"$workflow_name\",\"status\":\"pending\",\"conclusion\":\"none\"}")
-            summary_lines+=("- [ ] $workflow_name $emoji (pending)")
+            summary_lines+=("- [ ] $workflow_name (pending)")
             all_passed=false
           else
             status=$(echo "$workflow_status" | jq -r '.status')
@@ -87,26 +86,22 @@ runs:
             
             if [ "$status" = "completed" ]; then
               if [ "$conclusion" = "success" ]; then
-                emoji="✅"
                 results+=("{\"workflow\":\"$workflow_name\",\"status\":\"completed\",\"conclusion\":\"success\"}")
-                summary_lines+=("- [x] $workflow_name $emoji")
+                summary_lines+=("- [x] $workflow_name")
               elif [ "$conclusion" = "failure" ]; then
-                emoji="❌"
                 results+=("{\"workflow\":\"$workflow_name\",\"status\":\"completed\",\"conclusion\":\"failure\"}")
-                summary_lines+=("- [ ] $workflow_name $emoji (failed)")
+                summary_lines+=("- [ ] $workflow_name (failed)")
                 all_passed=false
               else
                 # skipped, cancelled, etc
-                emoji="⚠️"
                 results+=("{\"workflow\":\"$workflow_name\",\"status\":\"completed\",\"conclusion\":\"$conclusion\"}")
-                summary_lines+=("- [ ] $workflow_name $emoji ($conclusion)")
+                summary_lines+=("- [ ] $workflow_name ($conclusion)")
                 all_passed=false
               fi
             else
               # in_progress or queued
-              emoji="⏳"
               results+=("{\"workflow\":\"$workflow_name\",\"status\":\"$status\",\"conclusion\":\"none\"}")
-              summary_lines+=("- [ ] $workflow_name $emoji ($status)")
+              summary_lines+=("- [ ] $workflow_name ($status)")
               all_passed=false
             fi
           fi

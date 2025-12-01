@@ -85,23 +85,16 @@ runs:
         WORKFLOW_SUMMARY: ${{ inputs.workflow-summary }}
         AI_FEEDBACK: ${{ inputs.ai-feedback }}
       run: |
-        # Map type to emoji
+        # Map type to name
         case "$PR_TYPE" in
-          docs) TYPE_EMOJI="📝" TYPE_NAME="Documentation" ;;
-          bugfix) TYPE_EMOJI="🐛" TYPE_NAME="Bugfix" ;;
-          feature) TYPE_EMOJI="✨" TYPE_NAME="Feature" ;;
-        esac
-        
-        # Map size to emoji
-        case "$PR_SIZE" in
-          small) SIZE_EMOJI="🟢" ;;
-          medium) SIZE_EMOJI="🟡" ;;
-          large) SIZE_EMOJI="🔴" ;;
+          docs) TYPE_NAME="Documentation" ;;
+          bugfix) TYPE_NAME="Bugfix" ;;
+          feature) TYPE_NAME="Feature" ;;
         esac
         
         # Build the comment
         cat > /tmp/validation-comment.md <<EOF
-        ## ${TYPE_EMOJI} ${TYPE_NAME} PR Validation ${SIZE_EMOJI} (${PR_SIZE})
+        ## ${TYPE_NAME} PR Validation (${PR_SIZE})
         
         ${TEMPLATE_SECTION}
         
@@ -113,7 +106,7 @@ runs:
         # Add AI feedback if available
         if [ -n "$AI_FEEDBACK" ] && [ "$AI_FEEDBACK" != "*AI assessment skipped*" ]; then
           cat >> /tmp/validation-comment.md <<EOF
-        ### 🤖 Quick Review
+        ### Quick Review
         ${AI_FEEDBACK}
         
         EOF
@@ -122,7 +115,7 @@ runs:
         # Add footer
         cat >> /tmp/validation-comment.md <<EOF
         ---
-        💡 **Push updates anytime** - this checklist updates automatically!  
+        **Push updates anytime** - this checklist updates automatically!  
         See our [External PR Workflow Guide](../contribute/external-pr-workflow.md) for more details.
         
         <!-- external-pr-validation-comment -->

@@ -145,10 +145,10 @@ jobs:
           ALL_PASSED: ${{ steps.monitor-workflows.outputs.all-passed }}
         run: |
           if [ "$ALL_PASSED" = "true" ]; then
-            echo "✅ All workflows passed - validation complete"
+            echo "All workflows passed - validation complete"
             exit 0
           else
-            echo "⚠️ Some workflows failed or pending - see validation comment for details"
+            echo "Some workflows failed or pending - see validation comment for details"
             exit 1
           fi
 
