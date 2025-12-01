@@ -12,8 +12,6 @@ Hey! Thanks for improving our docs!
 
 **You're doing great!** Push changes and we'll update this automatically.
 
-**Timeline:** Usually reviewed within 1-2 days
-
 ---
 
 <!-- BUGFIX SECTION -->
@@ -34,8 +32,6 @@ Thanks for fixing this!
 
 **You're on the right track!** Push changes and we'll update this checklist automatically.
 
-**Timeline:** Usually reviewed within 2-3 days
-
 ---
 
 <!-- FEATURE SECTION -->
@@ -55,6 +51,4 @@ Excited about this feature!
 - No bugs introduced
 
 **Looking good!** Push changes and we'll update this checklist automatically.
-
-**Timeline:** Usually reviewed within 3-5 days
 

@@ -38,19 +38,15 @@ esac
 case "$SIZE" in
   small)
     SIZE_EMOJI="🟢"
-    TIMELINE="1-2 days"
     ;;
   medium)
     SIZE_EMOJI="🟡"
-    TIMELINE="2-5 days"
     ;;
   large)
     SIZE_EMOJI="🔴"
-    TIMELINE="1-2 weeks (includes alignment phase)"
     ;;
   *)
     SIZE_EMOJI="⚪"
-    TIMELINE="varies"
     ;;
 esac
 
@@ -66,10 +62,6 @@ Thanks for your contribution! We've categorized your PR to provide the right lev
 2. **You'll get a checklist** showing what's being validated
 3. **Our AI companion** will provide friendly feedback on code quality and tests
 4. **A human reviewer** will provide final approval
-
-### Expected Timeline
-
-**${TIMELINE}**
 
 $(if [ "$SIZE" = "large" ]; then echo "
 > **Note for Large PRs**: We'll start with an early alignment phase to ensure your approach fits with our goals before diving into detailed validation. This saves everyone time!

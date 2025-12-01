@@ -26,8 +26,6 @@ For large documentation changes, we first want to align on the structure and app
 - Information architecture makes sense
 - Clear navigation and organization
 
-**Timeline:** Usually reviewed within 1-2 weeks (includes alignment phase)
-
 ---
 
 <!-- BUGFIX SECTION -->
@@ -59,8 +57,6 @@ For large fixes, we want to ensure the approach is sound before detailed validat
 - Tests verify the fix comprehensively
 - No new critical bugs introduced
 - Implementation matches aligned approach
-
-**Timeline:** Usually reviewed within 1-2 weeks (includes alignment phase)
 
 ---
 
@@ -94,6 +90,4 @@ For large features, we want to align on the implementation before detailed valid
 - Code quality is high
 - No critical bugs in main paths
 - Implementation matches aligned design
-
-**Timeline:** Usually reviewed within 1-2 weeks (includes alignment phase)
 
