@@ -10,9 +10,6 @@ For large documentation changes, we first want to align on the structure and app
 
 ### Phase 2: Validation (after alignment)
 
-#### Automated checks (we monitor these)
-- [ ] Lint (docs and frontend)
-
 #### What we look for
 
 - Information architecture makes sense
@@ -32,11 +29,6 @@ For large fixes, we want to ensure the approach is sound before detailed validat
 
 ### Phase 2: Validation (after alignment)
 
-#### Automated checks (we monitor these)
-- [ ] Lint (frontend)
-- [ ] lint-go (backend)
-- [ ] All backend unit tests complete
-
 #### What we look for
 - Tests verify the fix comprehensively
 - No new critical bugs introduced
@@ -55,11 +47,6 @@ For large features, we want to align on the implementation before detailed valid
 - Once aligned, we'll add the `alignment-approved` label
 
 ### Phase 2: Validation (after alignment)
-
-#### Automated checks (we monitor these)
-- [ ] Lint (frontend)
-- [ ] lint-go (backend)
-- [ ] All backend unit tests complete
 
 #### What we look for
 - Core functionality is well-tested

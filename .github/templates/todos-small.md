@@ -1,9 +1,6 @@
 <!-- DOCS SECTION -->
 Hey! Thanks for improving our docs!
 
-### Automated checks (we monitor these)
-- [ ] Lint (docs and frontend)
-
 ### What we look for
 - Content is clear and helpful
 - Writing follows our style guide
@@ -14,11 +11,6 @@ Hey! Thanks for improving our docs!
 
 <!-- BUGFIX SECTION -->
 Thanks for fixing this!
-
-### Automated checks (we monitor these)
-- [ ] Lint (frontend)
-- [ ] lint-go (backend)
-- [ ] All backend unit tests complete
 
 ### What we look for
 - Tests verify the fix works
@@ -31,11 +23,6 @@ Push changes and we'll update this checklist automatically.
 
 <!-- FEATURE SECTION -->
 Excited about this feature!
-
-### Automated checks (we monitor these)
-- [ ] Lint (frontend)
-- [ ] lint-go (backend)
-- [ ] All backend unit tests complete
 
 ### What we look for
 - Tests cover new functionality
