@@ -62,14 +62,18 @@ Thanks for your contribution! This is a substantial PR, so we'll start with earl
 
 1. **Early alignment** - A squad member will review your approach first
 2. **Once aligned** - We'll add the \`alignment-approved\` label
-3. **Then automated checks** run and you'll get a validation checklist
-4. **Final review** by a squad member
+3. **Automated checks + code review** - CI runs and an automation reviews your code
+4. **Final review** by a squad member (verifies all feedback is addressed)
 
-### Why early alignment?
+### About the automated code review 🤖
 
-For large PRs, we want to ensure your approach fits with project goals before diving into detailed validation. This saves everyone time!
+An automation will review your code and leave inline comments for any issues it finds:
+- **Fix directly in GitHub** - Click "Fix in Web" to resolve issues without leaving
+- **Mark each comment as resolved** when you've addressed it
+- ✅ **Once all comments are resolved, the code review is complete!**
+- **Having issues?** Comment \`skip-automated-review\` and let us know what happened
 
-### What you can do
+### What you can do now
 
 - **Add context** about your implementation approach
 - **Be ready to discuss** the design with a squad member
@@ -91,14 +95,23 @@ Thanks for your contribution! We've categorized your PR to provide the right lev
 ### What happens next
 
 1. **Automated checks** will run (we monitor existing CI/CD)
-2. **You'll get a checklist** showing what's being validated
-3. **A member of the relevant squad** will provide final approval
+2. **Automated code review** will leave inline comments if issues are found
+3. **You'll get a checklist** showing what's being validated
+4. **A squad member** will verify all feedback is addressed and provide final approval
+
+### About the automated code review 🤖
+
+An automation will review your code and leave inline comments for any issues it finds:
+- **Fix directly in GitHub** - Click "Fix in Web" to resolve issues without leaving
+- **Mark each comment as resolved** when you've addressed it
+- ✅ **Once all comments are resolved, the code review is complete!**
+- **Having issues?** Comment \`skip-automated-review\` and let us know what happened
 
 ### What you can do
 
 - **Push updates anytime** - validation updates automatically!
 - Check your validation comment for specific todos
-- Address any feedback from automated checks
+- Address automated feedback directly in the PR
 
 ---
 
