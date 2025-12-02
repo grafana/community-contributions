@@ -24,7 +24,7 @@ jobs:
       - name: Configure Git
         run: |
           git config user.name "PR Copy Bot"
-          git config user.email "bot@tonypowa.grafana"
+          git config user.email "bot@community.grafana"
 
       - name: Sync fork with upstream
         run: |
@@ -181,9 +181,9 @@ jobs:
               echo "Original PR: https://github.com/grafana/grafana/pull/ ${pr_number}"
             } > /tmp/pr_description.txt
             
-            # Create PR without prefix (copying all PRs, not just external)
+            # Create PR in community-contributions repo
             if gh pr create \
-              --repo ${{ github.repository }} \
+              --repo grafana/community-contributions \
               --base main \
               --head "$branch_name" \
               --title "$pr_title" \
