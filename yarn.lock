@@ -19456,7 +19456,7 @@ __metadata:
     node-notifier: "npm:10.0.1"
     nx: "npm:21.3.11"
     ol: "npm:10.7.0"
-    ol-ext: "npm:4.0.36"
+    ol-ext: "npm:4.0.37"
     ol-mapbox-style: "npm:^13.0.1"
     open: "npm:^10.2.0"
     ora: "npm:^9.0.0"
@@ -25658,12 +25658,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ol-ext@npm:4.0.36":
-  version: 4.0.36
-  resolution: "ol-ext@npm:4.0.36"
+"ol-ext@npm:4.0.37":
+  version: 4.0.37
+  resolution: "ol-ext@npm:4.0.37"
   peerDependencies:
     ol: ">= 5.3.0"
-  checksum: 10/071ce9be427dce8be6fb8e4fbdc972038ace08090c21f6dce7ae0929fe5263518a1a80d7b205e0fd208ac337d49e3782ead805be19f74f0474c291dea8c8d01e
+  checksum: 10/57ee631de847b0903fcda863e197361e35ec42c0ed874e8c7e5ba1f3b3f0b1d497dfa758998feed3ef73e211ced0f77f3ca76b142f5c05f040962214f9c2a8db
   languageName: node
   linkType: hard
 
