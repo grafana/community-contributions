@@ -15,10 +15,10 @@ on:
     types:
       - synchronize
 
-# Prevent duplicate runs for the same PR
+# Prevent duplicate runs for the same PR - cancel previous runs
 concurrency:
   group: validate-medium-pr-${{ github.event.workflow_run.head_branch || github.event.pull_request.head.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read

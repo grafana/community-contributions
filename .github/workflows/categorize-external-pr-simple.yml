@@ -5,8 +5,12 @@ on:
     types:
       - opened
       - reopened
-      - edited
       - labeled
+
+# Prevent duplicate runs for the same PR
+concurrency:
+  group: categorize-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   pull-requests: write
