@@ -1,5 +1,20 @@
 {
   "comment": "Squad mapping configuration for PR routing and Slack notifications",
+  "notification_strategy": {
+    "description": "Minimal, actionable notifications - only on success states",
+    "rules": [
+      "Notify when validation passes (ready for human review)",
+      "Do NOT notify on PR open (wait for validation)",
+      "Do NOT notify on failures (let contributor iterate)",
+      "Do NOT re-notify on every commit (avoid spam)"
+    ],
+    "triggers": {
+      "small_pr": "All automated checks pass -> validation-passed",
+      "medium_pr": "All automated checks pass -> validation-passed",
+      "large_pr_phase1": "Needs early alignment (no alignment-approved label) -> early-alignment",
+      "large_pr_phase2": "Post-alignment, all checks pass -> ready-for-review"
+    }
+  },
   "squads": [
     {
       "name": "frontend",
