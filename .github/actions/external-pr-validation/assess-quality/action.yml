@@ -57,15 +57,16 @@ runs:
         echo "Fetching PR content..."
         
         # Get PR diff (limited to prevent huge diffs)
-        gh pr diff "$PR_NUMBER" | head -c 50000 > pr_diff.txt
+        # Use || true to ignore SIGPIPE (exit 141) when diff is larger than limit
+        gh pr diff "$PR_NUMBER" | head -c 50000 > pr_diff.txt || true
         diff_content=$(cat pr_diff.txt)
         
         # Get changed files list
-        files=$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | head -n 50 | tr '\n' ', ')
+        files=$(gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | head -n 50 | tr '\n' ', ' || true)
         
         # Get PR title and body
         pr_title=$(gh pr view "$PR_NUMBER" --json title --jq '.title')
-        pr_body=$(gh pr view "$PR_NUMBER" --json body --jq '.body' | head -c 2000)
+        pr_body=$(gh pr view "$PR_NUMBER" --json body --jq '.body' | head -c 2000 || true)
         
         echo "pr-title=$pr_title" >> "$GITHUB_OUTPUT"
         echo "files=$files" >> "$GITHUB_OUTPUT"
