@@ -101,12 +101,8 @@ runs:
             ;;
         esac
         
-        # Set header suffix based on size
-        if [ "$PR_SIZE" = "large" ]; then
-          HEADER_SUFFIX="Alignment & Validation"
-        else
-          HEADER_SUFFIX="What We're Checking"
-        fi
+        # Set header suffix (same for all sizes since alignment happens separately)
+        HEADER_SUFFIX="What We're Checking"
         
         # Build the comment with consolidated header
         cat > /tmp/validation-comment.md <<EOF
@@ -119,8 +115,8 @@ runs:
         
         EOF
         
-        # Add AI feedback if available
-        if [ -n "$AI_FEEDBACK" ] && [ "$AI_FEEDBACK" != "*AI assessment skipped*" ]; then
+        # Add AI feedback if available (skip for large PRs - bugbot handles that)
+        if [ "$PR_SIZE" != "large" ] && [ -n "$AI_FEEDBACK" ] && [ "$AI_FEEDBACK" != "*AI assessment skipped*" ]; then
           cat >> /tmp/validation-comment.md <<EOF
         ### Initial scan
         ${AI_FEEDBACK}

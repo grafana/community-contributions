@@ -53,13 +53,11 @@ jobs:
               echo "Removed awaiting-alignment label"
             fi
             
-            # Post special message for alignment approval
+            # Post simple message for alignment approval
             {
               echo "## ✅ Alignment approved"
               echo ""
               echo "Thanks for aligning on the approach! Automated validation will now run."
-              echo ""
-              echo "Current classification: \`$size_label\` | \`$type_label\`"
             } > /tmp/human-update.md
           else
             # Regular label update
