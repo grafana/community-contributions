@@ -115,15 +115,6 @@ runs:
         
         EOF
         
-        # Add AI feedback if available (skip for large PRs - bugbot handles that)
-        if [ "$PR_SIZE" != "large" ] && [ -n "$AI_FEEDBACK" ] && [ "$AI_FEEDBACK" != "*AI assessment skipped*" ]; then
-          cat >> /tmp/validation-comment.md <<EOF
-        ### Initial scan
-        ${AI_FEEDBACK}
-        
-        EOF
-        fi
-        
         # Add footer
         cat >> /tmp/validation-comment.md <<EOF
         ---
