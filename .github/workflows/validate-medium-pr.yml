@@ -170,4 +170,20 @@ jobs:
           fi
           # Always exit 0 so we don't block the PR with red X while workflows are running
           exit 0
+    
+    outputs:
+      pr-number: ${{ steps.pr-info.outputs.pr-number }}
+      should-run: ${{ steps.pr-info.outputs.should-run }}
+
+  # BUGBOT INTEGRATION - Medium PRs get thorough review
+  # To expand to other squads, add their labels to the pilot check in categorize workflow
+  bugbot-review:
+    name: Bugbot Code Review
+    needs: validate
+    if: needs.validate.outputs.should-run == 'true'
+    uses: ./.github/workflows/cursor-bugbot.yml
+    with:
+      pr-number: ${{ fromJson(needs.validate.outputs.pr-number) }}
+      review-depth: thorough
+    secrets: inherit
 

@@ -2,6 +2,14 @@
 
 This repository is a sandbox for testing external contributor PRs to Grafana.
 
+## Auto-Review Control
+
+<!-- IMPORTANT: Do not auto-review PRs. Only review when explicitly triggered by:
+     1. Our validation workflows (after categorization for small/medium, after alignment for large)
+     2. Engineer request via @cursor comment
+-->
+auto_review: false
+
 ## Review Focus
 
 ### Priority: Security Issues

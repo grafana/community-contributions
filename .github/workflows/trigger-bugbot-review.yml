@@ -1,0 +1,67 @@
+name: Trigger Bugbot Review
+
+# Triggered when someone comments @cursor on a PR
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  check-trigger:
+    name: Check for @cursor mention
+    # Only run on PR comments (not issues) that contain @cursor
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@cursor')
+    runs-on: ubuntu-latest
+    
+    outputs:
+      should-review: ${{ steps.check.outputs.should-review }}
+      pr-number: ${{ steps.check.outputs.pr-number }}
+      review-depth: ${{ steps.check.outputs.review-depth }}
+    
+    steps:
+      - name: Check comment and determine review type
+        id: check
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          echo "pr-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "should-review=true" >> "$GITHUB_OUTPUT"
+          
+          # Check if user wants thorough review
+          if echo "$COMMENT_BODY" | grep -qiE "@cursor.*(thorough|deep|full)"; then
+            echo "review-depth=thorough" >> "$GITHUB_OUTPUT"
+            echo "Thorough review requested"
+          else
+            echo "review-depth=lightweight" >> "$GITHUB_OUTPUT"
+            echo "Lightweight review (default)"
+          fi
+
+      - name: Acknowledge request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REVIEW_DEPTH: ${{ steps.check.outputs.review-depth }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo ${{ github.repository }} --body "👀 **Bugbot review requested** ($REVIEW_DEPTH)
+
+Starting code review now. I'll leave inline comments on any issues I find.
+
+_Triggered by @${{ github.event.comment.user.login }}_"
+
+  run-bugbot:
+    name: Run Bugbot Review
+    needs: check-trigger
+    if: needs.check-trigger.outputs.should-review == 'true'
+    uses: ./.github/workflows/cursor-bugbot.yml
+    with:
+      pr-number: ${{ fromJson(needs.check-trigger.outputs.pr-number) }}
+      review-depth: ${{ needs.check-trigger.outputs.review-depth }}
+    secrets: inherit
+

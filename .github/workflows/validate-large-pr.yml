@@ -311,4 +311,19 @@ jobs:
           fi
           # Always exit 0 so we don't block the PR with red X while workflows are running
           exit 0
+    
+    outputs:
+      pr-number: ${{ steps.pr-info.outputs.pr-number }}
+
+  # BUGBOT INTEGRATION - Large PRs get lightweight review (already aligned with humans)
+  # Only runs AFTER alignment-approved label is present
+  # To expand to other squads, add their labels to the pilot check in categorize workflow
+  bugbot-review:
+    name: Bugbot Code Review
+    needs: automated-validation
+    uses: ./.github/workflows/cursor-bugbot.yml
+    with:
+      pr-number: ${{ fromJson(needs.automated-validation.outputs.pr-number) }}
+      review-depth: lightweight
+    secrets: inherit
 
