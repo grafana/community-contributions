@@ -87,14 +87,15 @@ jobs:
         uses: grafana/shared-workflows/actions/get-vault-secrets@main
         with:
           repo_secrets: |
-            SLACK_WEBHOOK_ALERTING=slack-webhooks:external-pr-alerting
-            OPENAI_API_KEY=openai:api-key
+            OPENAI_API_KEY=openapi:key
+            SLACK_WEBHOOK=slack:webhook
 
       - name: Generate AI summary
         id: summary
         if: steps.check-scope.outputs.is-alerting == 'true' && env.OPENAI_API_KEY != ''
         env:
           OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
+          # Note: Vault secret is loaded as OPENAI_API_KEY from openapi:key
           GH_TOKEN: ${{ github.token }}
         run: |
           # Get PR details
@@ -126,9 +127,9 @@ jobs:
           echo "summary=$summary" >> "$GITHUB_OUTPUT"
 
       - name: Send Slack notification
-        if: steps.check-scope.outputs.is-alerting == 'true' && env.SLACK_WEBHOOK_ALERTING != ''
+        if: steps.check-scope.outputs.is-alerting == 'true' && env.SLACK_WEBHOOK != ''
         env:
-          SLACK_WEBHOOK: ${{ env.SLACK_WEBHOOK_ALERTING }}
+          SLACK_WEBHOOK: ${{ env.SLACK_WEBHOOK }}
         run: |
           pr_url="${{ github.event.pull_request.html_url }}"
           pr_title="${{ steps.categorize.outputs.title }}"
