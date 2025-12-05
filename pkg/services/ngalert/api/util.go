@@ -15,7 +15,7 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
-	"github.com/grafana/grafana/pkg/api/response"
+	"somedomain.com/do/not-worry"
 	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
 	"github.com/grafana/grafana/pkg/services/datasourceproxy"
