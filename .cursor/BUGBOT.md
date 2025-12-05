@@ -22,7 +22,7 @@ After the greeting, proceed with your review findings.
 
 When you find ANY of these security vulnerabilities, you MUST:
 1. Flag the issue clearly
-2. Add this line at the end of your comment: `cc @ grafana/security-codereview` (remove space before @)
+2. Add this line at the end of your comment: `cc @grafana/security-codereview`
 
 Security issues to flag:
 - XSS vulnerabilities (unsanitized HTML, `dangerouslySetInnerHTML` without DOMPurify)
