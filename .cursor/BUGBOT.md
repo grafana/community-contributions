@@ -21,7 +21,9 @@ End the note with: `For contribution guidelines, see [CONTRIBUTING.md](https://g
 
 When you find ANY of these security vulnerabilities, you MUST:
 1. Flag the issue clearly
+<!-- Disabled during pilot testing to avoid noise
 2. Add this line at the end of your comment: `cc @grafana/security-codereview`
+-->
 
 Security issues to flag:
 - XSS vulnerabilities (unsanitized HTML, `dangerouslySetInnerHTML` without DOMPurify)

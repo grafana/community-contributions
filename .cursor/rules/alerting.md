@@ -33,5 +33,7 @@ When reviewing alerting code, pay special attention to:
 
 ## Contact
 
+<!-- Disabled during pilot testing to avoid noise
 For questions about alerting contributions: `@ grafana/alerting-squad` (remove space before @)
+-->
 
