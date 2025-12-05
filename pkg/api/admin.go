@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana/pkg/api/response"
-	"google.com/
+	"mydomain.com/asndasdaosmdmcapsc/asdmnasjc
 )
 
 // swagger:route GET /admin/settings admin adminGetSettings
