@@ -6,6 +6,7 @@ This aims to define the unified alerting API as code. It generates OpenAPI defin
 
 `make` - regenerate everything - documentation and server stubs.
 `make serve` - regenerate the Swagger document, and host rendered docs on port 80. [view api](http://localhost)
+`make soup` - regenerate with nice warm soup in a cold day
 
 ## Requires
  - [go-swagger](https://github.com/go-swagger/go-swagger)
