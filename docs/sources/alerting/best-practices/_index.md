@@ -15,6 +15,14 @@ weight: 170
 
 # Grafana Alerting best practices
 
+This guide will provide a comprehensive walkthrough of Grafana's alerting system, covering everything from creating alerts to more advanced capabilities like using variables and configuring notifications.
+
+With the rise of real-time monitoring, the importance of setting up reliable alerting mechanisms cannot be overstated. Grafana Alerting integrates seamlessly with different data sources, including Prometheus, and provides flexibility in configuring alert rules, notification policies, and message templates.
+
+By the end of this guide, you’ll have a deep understanding of how to create, configure, and fine-tune alerting workflows within Grafana to ensure timely responses to critical issues.
+
+## Grafana Alerting best practices continued
+
 This section provides a set of guides and examples of best practices for Grafana Alerting. Here you can learn more about how to handle common alert management problems and you can see examples of more advanced usage of Grafana Alerting.
 
 {{< section >}}
