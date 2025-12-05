@@ -12,9 +12,11 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     # Only run for external PRs (not from grafana org members)
-    if: github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' || 
-        github.event.pull_request.author_association == 'FIRST_TIMER' ||
-        github.event.pull_request.author_association == 'NONE'
+    # Includes: FIRST_TIME_CONTRIBUTOR, FIRST_TIMER, NONE, CONTRIBUTOR
+    # Excludes: MEMBER, OWNER, COLLABORATOR
+    if: github.event.pull_request.author_association != 'MEMBER' && 
+        github.event.pull_request.author_association != 'OWNER' &&
+        github.event.pull_request.author_association != 'COLLABORATOR'
     
     steps:
       - name: Check if alerting-related (pilot scope)
