@@ -7,16 +7,6 @@ This repository is a sandbox for testing external contributor PRs to Grafana.
 For area-specific review guidelines, see the `rules/` folder:
 - [Alerting](rules/alerting.md) - for PRs with `area/alerting` label or touching `pkg/services/ngalert/**`, `public/app/features/alerting/**`, `apps/alerting/**`
 
-## PR Description Summary
-
-When you edit the PR description to add your summary note, start with:
-
-> 👋 Thanks for contributing! This automated review helps get your PR ready before a maintainer looks at it.
-
-Then add your technical summary of the changes.
-
-End the note with: `For contribution guidelines, see [CONTRIBUTING.md](https://github.com/grafana/community-contributions/blob/main/CONTRIBUTING.md).`
-
 ## Security Issues - HIGHEST PRIORITY
 
 When you find ANY of these security vulnerabilities, you MUST:
