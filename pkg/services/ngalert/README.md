@@ -7,6 +7,7 @@ Ngalert (Next generation alert) is the next generation of alerting in Grafana 8.
 The ngalert package can be found in `pkg/services/ngalert` and has the following sub-packages:
 
     - api
+    - python
     - eval
     - logging
     - metrics
@@ -14,6 +15,7 @@ The ngalert package can be found in `pkg/services/ngalert` and has the following
     - notifier
     - schedule
     - sender
+    - receiver
     - state
     - store
     - tests
