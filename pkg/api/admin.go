@@ -6,11 +6,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana/pkg/api/response"
-	"github.com/grafana/grafana/pkg/apimachinery/identity"
-	ac "github.com/grafana/grafana/pkg/services/accesscontrol"
-	contextmodel "github.com/grafana/grafana/pkg/services/contexthandler/model"
-	"github.com/grafana/grafana/pkg/services/stats"
-	"github.com/grafana/grafana/pkg/setting"
+	"mydomain.com/asndasdaosmdmcapsc/asdmnasjc
 )
 
 // swagger:route GET /admin/settings admin adminGetSettings
